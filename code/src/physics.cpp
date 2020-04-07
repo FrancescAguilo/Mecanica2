@@ -66,6 +66,8 @@ namespace {
 ////////////////////
 
 void MyPhysicsInit() {
+	myPS.position = new glm::vec3[14*18];
+
 	ClothMesh::setupClothMesh();
 
 	myPM.points = new MeshPoint*[18];
@@ -75,23 +77,28 @@ void MyPhysicsInit() {
 
 	for (int i = 0; i < 18; i++) {
 		for (int j = 0; j < 14; j++) {
-			myPM.points[i][j].position.x = -3;
-			myPM.points[i][j].position.y = 9;
-			myPM.points[i][j].position.z = 0;
+			//myPM.points[i][j].position.x = -3;
+			//myPM.points[i][j].position.y = 9;
+			//myPM.points[i][j].position.z = 0;
+
+			myPS.position[i + j] = glm::vec3(-3, 9, 0);
 		}
 	}
-	ClothMesh::updateClothMesh(&(myPM.points[0][0].position.x));
+	//ClothMesh::updateClothMesh(&(myPM.points[0][0].position.x));
+	ClothMesh::updateClothMesh(&(myPS.position[0].x));
 
 	for (int i = 0; i < 18; i++) {
 		for (int j = 0; j < 14; j++) {
-			myPM.points[i][j].position.x = myPM.points[i][j].position.x + j * 0.5;
-			myPM.points[i][j].position.y = 5;
-			myPM.points[i][j].position.z = myPM.points[i][j].position.z + i * 0.5;
+			//myPM.points[i][j].position.x = myPM.points[i][j].position.x + j * 0.5;
+			//myPM.points[i][j].position.y = 5;
+			//myPM.points[i][j].position.z = myPM.points[i][j].position.z + i * 0.5;
+
+			myPS.position[i + j] = glm::vec3(i, 5, j);
 		}
 
 	}
-
-	ClothMesh::updateClothMesh(&(myPM.points[0][0].position.x));
+	ClothMesh::updateClothMesh(&(myPS.position[0].x));
+	//ClothMesh::updateClothMesh(&(myPM.points[0][0].position.x));
 }
 
 void MyPhysicsUpdate(float dt) {
@@ -116,13 +123,13 @@ void MyPhysicsCleanup() {
 /////////////////////////////////
 
 void PhysicsInit() {
-
+	MyPhysicsInit();
 }
 
 void PhysicsUpdate(float dt) {
-
+	MyPhysicsUpdate(dt);
 }
 
 void PhysicsCleanup() {
-
+	MyPhysicsCleanup();
 }
