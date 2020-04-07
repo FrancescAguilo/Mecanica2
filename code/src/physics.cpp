@@ -75,18 +75,32 @@ void MyPhysicsInit() {
 
 	for (int i = 0; i < 18; i++) {
 		for (int j = 0; j < 14; j++) {
+			myPM.points[i][j].position.x = -3;
+			myPM.points[i][j].position.y = 9;
+			myPM.points[i][j].position.z = 0;
+		}
+	}
+	ClothMesh::updateClothMesh(&(myPM.points[0][0].position.x));
+
+	for (int i = 0; i < 18; i++) {
+		for (int j = 0; j < 14; j++) {
+			myPM.points[i][j].position.x = myPM.points[i][j].position.x + j * 0.5;
 			myPM.points[i][j].position.y = 5;
-			myPM.points[i][j].position.z = i;
-			myPM.points[i][j].position.x = j;
+			myPM.points[i][j].position.z = myPM.points[i][j].position.z + i * 0.5;
 		}
 
 	}
 
+	ClothMesh::updateClothMesh(&(myPM.points[0][0].position.x));
 }
 
 void MyPhysicsUpdate(float dt) {
-	//ClothMesh::updateClothMesh();
-	ClothMesh::drawClothMesh();
+	
+
+
+
+	//ClothMesh::updateClothMesh(&(myPM.points[0][0].position.x));
+	
 }
 
 void MyPhysicsCleanup() {
