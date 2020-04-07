@@ -23,11 +23,11 @@ void GUI() {
 	ImGui::End();
 }
 
-namespace LilSpheres {
-	extern const int maxParticles;
-	extern int firstParticleIdx;
-	extern int particleCount;
-	extern void updateParticles(int startIdx, int count, float* array_data);
+namespace ClothMesh {
+	extern void setupClothMesh();
+	extern void cleanupClothMesh();
+	extern void updateClothMesh(float* array_data);
+	extern void drawClothMesh();
 }
 
 namespace {
@@ -66,14 +66,16 @@ namespace {
 ////////////////////
 
 void MyPhysicsInit() {
-
+	ClothMesh::setupClothMesh();
 }
 
 void MyPhysicsUpdate(float dt) {
-
+	//ClothMesh::updateClothMesh();
+	ClothMesh::drawClothMesh();
 }
 
 void MyPhysicsCleanup() {
+	ClothMesh::cleanupClothMesh();
 	delete[] myPM.points;
 }
 

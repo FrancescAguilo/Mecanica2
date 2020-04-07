@@ -6,7 +6,7 @@
 bool renderSphere = false;
 bool renderCapsule = false;
 bool renderParticles = false;
-bool renderCloth = false;
+bool renderCloth = true;
 bool renderCube = false;
 
 namespace Sphere {
