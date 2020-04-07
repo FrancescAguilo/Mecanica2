@@ -56,7 +56,7 @@ namespace {
 	};
 
 	static struct ParticleMesh {
-		MeshPoint *points;
+		MeshPoint **points;
 		float kEslatic = 1;
 		float kDump = 1;
 
@@ -67,6 +67,21 @@ namespace {
 
 void MyPhysicsInit() {
 	ClothMesh::setupClothMesh();
+
+	myPM.points = new MeshPoint*[18];
+	for (int i = 0; i < 14; i++) {
+		myPM.points[i] = new MeshPoint[14];
+	}
+
+	for (int i = 0; i < 18; i++) {
+		for (int j = 0; j < 14; j++) {
+			myPM.points[i][j].position.y = 5;
+			myPM.points[i][j].position.z = i;
+			myPM.points[i][j].position.x = j;
+		}
+
+	}
+
 }
 
 void MyPhysicsUpdate(float dt) {
