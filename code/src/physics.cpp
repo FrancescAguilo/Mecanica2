@@ -209,33 +209,67 @@ void MyPhysicsUpdate(float dt) {
 					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint, myPM.structuralSpringLength);
 					//shear
 					myPM.points[i][j].shearForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].upPoint->rightPoint, myPM.shearSpringLength);
-					myPM.points[i][j].shearForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint->rightPoint, myPM.shearSpringLength);
+					myPM.points[i][j].shearForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint->rightPoint, myPM.shearSpringLength);
 				}
 			}
 			else if (myPM.points[i][j].rightPoint == nullptr) {
 				if (myPM.points[i][j].upPoint == nullptr) { //4
-
+					//structural
+					myPM.points[i][j].structuralForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint, myPM.structuralSpringLength);
+					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint, myPM.structuralSpringLength);
+					//shear
+					myPM.points[i][j].shearForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint->leftPoint, myPM.shearSpringLength);
 
 				}
 				else if (myPM.points[i][j].downPoint == nullptr) { //5
-
-
+					//structural
+					myPM.points[i][j].structuralForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint, myPM.structuralSpringLength);
+					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].upPoint, myPM.structuralSpringLength);
+					//shear
+					myPM.points[i][j].shearForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].upPoint->leftPoint, myPM.shearSpringLength);
 				}
 				else { //6
-
+					//structural
+					myPM.points[i][j].structuralForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint, myPM.structuralSpringLength);
+					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].upPoint, myPM.structuralSpringLength);
+					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint, myPM.structuralSpringLength);
+					//shear
+					myPM.points[i][j].shearForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].upPoint->leftPoint, myPM.shearSpringLength);
+					myPM.points[i][j].shearForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint->leftPoint, myPM.shearSpringLength);
 				}
 			}
 			else {
 				if (myPM.points[i][j].upPoint == nullptr) { //7
-
+					//structural
+					myPM.points[i][j].structuralForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint, myPM.structuralSpringLength);
+					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint, myPM.structuralSpringLength);
+					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint, myPM.structuralSpringLength);
+					//shear
+					myPM.points[i][j].shearForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint->downPoint, myPM.shearSpringLength);
+					myPM.points[i][j].shearForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint->downPoint, myPM.shearSpringLength);
 
 				}
 				else if (myPM.points[i][j].downPoint == nullptr) { //8
-
+					//structural
+					myPM.points[i][j].structuralForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint, myPM.structuralSpringLength);
+					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint, myPM.structuralSpringLength);
+					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].upPoint, myPM.structuralSpringLength);
+					//shear
+					myPM.points[i][j].shearForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint->upPoint, myPM.shearSpringLength);
+					myPM.points[i][j].shearForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint->upPoint, myPM.shearSpringLength);
 
 				}
 				else { //9
-
+					//structural
+					myPM.points[i][j].structuralForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint, myPM.structuralSpringLength);
+					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint, myPM.structuralSpringLength);
+					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].upPoint, myPM.structuralSpringLength);
+					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint, myPM.structuralSpringLength);
+					//shear
+					myPM.points[i][j].shearForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint->upPoint, myPM.shearSpringLength);
+					myPM.points[i][j].shearForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint->downPoint, myPM.shearSpringLength);
+					myPM.points[i][j].shearForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint->downPoint, myPM.shearSpringLength);
+					myPM.points[i][j].shearForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint->upPoint, myPM.shearSpringLength);
 				}
 			}
 			myPM.points[i][j].totalForce = myPM.points[i][j].structuralForce + myPM.points[i][j].shearForce + myPM.points[i][j].bendingForce + glm::vec3(0,myPM.gravity,0);
