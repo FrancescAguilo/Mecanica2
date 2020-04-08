@@ -1,7 +1,8 @@
 #include <imgui\imgui.h>
 #include <imgui\imgui_impl_sdl_gl3.h>
 #include <glm\glm.hpp>
-
+//#include <glm\vec3.hpp>
+#include <iostream>
 
 //Exemple
 extern void Exemple_GUI();
@@ -51,8 +52,8 @@ namespace {
 		glm::vec3 bendingForce; //contaria?
 		float mass = 1;
 		
-		/*glm::vec3 velocity;
-		glm::vec3 lastVelocity;*/
+		glm::vec3 velocity;
+		//glm::vec3 lastVelocity;
 
 		MeshPoint *rightPoint;
 		MeshPoint *leftPoint;
@@ -76,6 +77,15 @@ void updateMyPMPointsPositions() {
 		}
 	}
 }
+
+glm::vec3 getSpringForce(MeshPoint P1, MeshPoint P2 , float L12) {
+
+	glm::vec3 auxVec3 =  (P1.actualPosition-P2.actualPosition) / glm::length<float>(P1.actualPosition - P2.actualPosition);
+	float firstComponent = myPM.kEslatic * (glm::length<float>(P1.actualPosition - P2.actualPosition) - L12);
+	float secondComponent = myPM.kDump * (glm::dot<float>(auxVec3,P1.velocity-P2.velocity));
+	
+	return -(firstComponent + secondComponent) * auxVec3;
+}
 ////////////////////
 
 void MyPhysicsInit() {
@@ -96,7 +106,7 @@ void MyPhysicsInit() {
 			myPM.points[i][j].actualPosition.z = j * 0.5f - 13 * 0.5f * 0.5f;
 			myPM.points[i][j].lastPosition = myPM.points[i][j].actualPosition;
 
-			//myPM.points[i][j].velocity = glm::vec3(0,0,0); //velocitat inicial = 0
+			myPM.points[i][j].velocity = glm::vec3(0,0,0); //velocitat inicial = 0
 			//myPM.points[i][j].lastVelocity = myPM.points[i][j].velocity;
 			myPM.points[i][j].totalForce = glm::vec3(0, myPM.gravity, 0); //força total inicial = gravetat
 			myPM.points[i][j].shearForce = glm::vec3(0, 0, 0);
@@ -112,16 +122,19 @@ void MyPhysicsInit() {
 
 void MyPhysicsUpdate(float dt) {
 	//forçes
+	//getSpringForce(glm::vec3(2, 2, 2), glm::vec3(2, 2, 1), 0);
 
-
-	//actualitza posicions
+	//actualitza posicions i velocitat apart
 	for (int i = 0; i < 18; i++) {
 		for (int j = 0; j < 14; j++) {
 
 			
 			myPM.points[i][j].newPosition = myPM.points[i][j].actualPosition + (myPM.points[i][j].actualPosition - myPM.points[i][j].lastPosition) + (myPM.points[i][j].totalForce / myPM.points[i][j].mass)*glm::pow(dt, 2);
 			myPM.points[i][j].lastPosition = myPM.points[i][j].actualPosition;
-			myPM.points[i][j].actualPosition = myPM.points[i][j].newPosition;
+			
+			myPM.points[i][j].velocity = (myPM.points[i][j].newPosition - myPM.points[i][j].actualPosition) / dt;
+
+		    myPM.points[i][j].actualPosition = myPM.points[i][j].newPosition;
 		}
 	}
 
