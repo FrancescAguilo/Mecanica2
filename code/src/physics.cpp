@@ -61,10 +61,10 @@ namespace {
 		MeshPoint *upPoint;
 		MeshPoint *downPoint;
 
-		float LtoRight;
+		/*float LtoRight;
 		float LtoLeft;
 		float LtoUp;
-		float LtoDown;
+		float LtoDown;*/
 
 	};
 
@@ -74,7 +74,9 @@ namespace {
 		float kEslatic = 1;
 		float kDump = 1;
 		float gravity = -9.81;
-
+		float structuralSpringLength = 0.5f;
+		float shearSpringLength = glm::sqrt(glm::pow(structuralSpringLength,2)*2);
+		float bendingSpringLength = structuralSpringLength * 2;
 	} myPM;
 }
 void updateMyPMPointsPositions() {
@@ -114,10 +116,11 @@ void MyPhysicsInit() {
 			myPM.points[i][j].lastPosition = myPM.points[i][j].actualPosition;
 
 			myPM.points[i][j].velocity = glm::vec3(0,0,0); //velocitat inicial = 0
-			myPM.points[i][j].totalForce = glm::vec3(0, 0/*myPM.gravity*/, 0); //força total inicial = gravetat
-			myPM.points[i][j].shearForce = glm::vec3(0, 0, 0);
-			myPM.points[i][j].structuralForce = glm::vec3(0, 0, 0);
-		    myPM.points[i][j].bendingForce = glm::vec3(0, 0, 0);
+
+			//myPM.points[i][j].totalForce = glm::vec3(0, 0/*myPM.gravity*/, 0); //força total inicial = gravetat
+			//myPM.points[i][j].shearForce = glm::vec3(0, 0, 0);
+			//myPM.points[i][j].structuralForce = glm::vec3(0, 0, 0);
+		 //   myPM.points[i][j].bendingForce = glm::vec3(0, 0, 0);
 
 			//pointers laterals
 			if (i == 0) {
@@ -148,25 +151,25 @@ void MyPhysicsInit() {
 			}
 		}
 	}
-	for (int i = 0; i < 18; i++) {
-		for (int j = 0; j < 14; j++) {
-			//Longituds
+	//for (int i = 0; i < 18; i++) {
+	//	for (int j = 0; j < 14; j++) {
+	//		//Longituds
 
-			if (myPM.points[i][j].leftPoint != nullptr) {
-				myPM.points[i][j].LtoLeft = glm::length<float>(myPM.points[i][j].actualPosition- myPM.points[i-1][j].actualPosition);
-			}
-			if (myPM.points[i][j].rightPoint != nullptr) {
-				myPM.points[i][j].LtoRight = glm::length<float>(myPM.points[i][j].actualPosition - myPM.points[i + 1][j].actualPosition);
-			}
-			if (myPM.points[i][j].downPoint != nullptr) {
-				myPM.points[i][j].LtoDown = glm::length<float>(myPM.points[i][j].actualPosition - myPM.points[i][j-1].actualPosition);
-			}
-			if (myPM.points[i][j].upPoint != nullptr) {
-				myPM.points[i][j].LtoUp = glm::length<float>(myPM.points[i][j].actualPosition - myPM.points[i][j+1].actualPosition);
-			}
-			
-		}
-	}
+	//		if (myPM.points[i][j].leftPoint != nullptr) {
+	//			myPM.points[i][j].LtoLeft = glm::length<float>(myPM.points[i][j].actualPosition- myPM.points[i-1][j].actualPosition);
+	//		}
+	//		if (myPM.points[i][j].rightPoint != nullptr) {
+	//			myPM.points[i][j].LtoRight = glm::length<float>(myPM.points[i][j].actualPosition - myPM.points[i + 1][j].actualPosition);
+	//		}
+	//		if (myPM.points[i][j].downPoint != nullptr) {
+	//			myPM.points[i][j].LtoDown = glm::length<float>(myPM.points[i][j].actualPosition - myPM.points[i][j-1].actualPosition);
+	//		}
+	//		if (myPM.points[i][j].upPoint != nullptr) {
+	//			myPM.points[i][j].LtoUp = glm::length<float>(myPM.points[i][j].actualPosition - myPM.points[i][j+1].actualPosition);
+	//		}
+	//		
+	//	}
+	//}
 
 	updateMyPMPointsPositions();
 	ClothMesh::updateClothMesh(&(myPM.pointsPositions[0].x));
@@ -176,8 +179,68 @@ void MyPhysicsInit() {
 
 void MyPhysicsUpdate(float dt) {
 	//forçes
-	//getSpringForce(glm::vec3(2, 2, 2), glm::vec3(2, 2, 1), 0);
+	for (int i = 0; i < 18; i++) {
+		for (int j = 0; j < 14; j++) {
 
+			myPM.points[i][j].structuralForce = glm::vec3(0,0,0);
+			myPM.points[i][j].shearForce = glm::vec3(0, 0, 0);
+			myPM.points[i][j].bendingForce = glm::vec3(0, 0, 0);
+
+			if (myPM.points[i][j].leftPoint == nullptr) {
+				if (myPM.points[i][j].upPoint == nullptr) { //1
+					//structural
+					myPM.points[i][j].structuralForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint, myPM.structuralSpringLength);
+					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint, myPM.structuralSpringLength);
+					//shear
+					myPM.points[i][j].shearForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint->rightPoint, myPM.shearSpringLength);
+				}
+				else if (myPM.points[i][j].downPoint == nullptr) { //2
+
+					//structural
+					myPM.points[i][j].structuralForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint, myPM.structuralSpringLength);
+					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].upPoint, myPM.structuralSpringLength);
+					//shear
+					myPM.points[i][j].shearForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].upPoint->rightPoint, myPM.shearSpringLength);
+				}
+				else { //3
+					//structural
+					myPM.points[i][j].structuralForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint, myPM.structuralSpringLength);
+					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].upPoint, myPM.structuralSpringLength);
+					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint, myPM.structuralSpringLength);
+					//shear
+					myPM.points[i][j].shearForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].upPoint->rightPoint, myPM.shearSpringLength);
+					myPM.points[i][j].shearForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint->rightPoint, myPM.shearSpringLength);
+				}
+			}
+			else if (myPM.points[i][j].rightPoint == nullptr) {
+				if (myPM.points[i][j].upPoint == nullptr) { //4
+
+
+				}
+				else if (myPM.points[i][j].downPoint == nullptr) { //5
+
+
+				}
+				else { //6
+
+				}
+			}
+			else {
+				if (myPM.points[i][j].upPoint == nullptr) { //7
+
+
+				}
+				else if (myPM.points[i][j].downPoint == nullptr) { //8
+
+
+				}
+				else { //9
+
+				}
+			}
+			myPM.points[i][j].totalForce = myPM.points[i][j].structuralForce + myPM.points[i][j].shearForce + myPM.points[i][j].bendingForce + glm::vec3(0,myPM.gravity,0);
+		}
+	}
 
 
 	//actualitza posicions i velocitat apart amb Verlet
