@@ -111,7 +111,9 @@ void MyPhysicsInit() {
 }
 
 void MyPhysicsUpdate(float dt) {
-	
+	//forçes
+
+
 	//actualitza posicions
 	for (int i = 0; i < 18; i++) {
 		for (int j = 0; j < 14; j++) {
