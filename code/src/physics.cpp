@@ -9,7 +9,7 @@ extern void Exemple_GUI();
 extern void Exemple_PhysicsInit();
 extern void Exemple_PhysicsUpdate(float dt);
 extern void Exemple_PhysicsCleanup();
-
+extern bool renderSphere;
 
 bool show_test_window = false;
 void GUI() {
@@ -18,7 +18,8 @@ void GUI() {
 
 	{
 		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);//FrameRate
-		Exemple_GUI();
+		//Exemple_GUI();
+		ImGui::Checkbox("Esfera", &renderSphere);
 	}
 
 	ImGui::End();
@@ -59,6 +60,12 @@ namespace {
 		MeshPoint *leftPoint;
 		MeshPoint *upPoint;
 		MeshPoint *downPoint;
+
+		float LtoRight;
+		float LtoLeft;
+		float LtoUp;
+		float LtoDown;
+
 	};
 
 	static struct ParticleMesh {
@@ -112,6 +119,9 @@ void MyPhysicsInit() {
 			myPM.points[i][j].shearForce = glm::vec3(0, 0, 0);
 			myPM.points[i][j].structuralForce = glm::vec3(0, 0, 0);
 		    myPM.points[i][j].bendingForce = glm::vec3(0, 0, 0);
+
+
+
 		}
 	}
 	updateMyPMPointsPositions();
@@ -124,7 +134,9 @@ void MyPhysicsUpdate(float dt) {
 	//forçes
 	//getSpringForce(glm::vec3(2, 2, 2), glm::vec3(2, 2, 1), 0);
 
-	//actualitza posicions i velocitat apart
+
+
+	//actualitza posicions i velocitat apart amb Verlet
 	for (int i = 0; i < 18; i++) {
 		for (int j = 0; j < 14; j++) {
 
