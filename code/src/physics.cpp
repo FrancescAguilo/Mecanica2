@@ -176,9 +176,9 @@ void MyPhysicsUpdate(float dt) {
 			//Colisions
 
 			//plano tierra                                     positionI                                                                                                        positionF
-			if (((glm::dot(extraData::XZn, myPM.points[i][j].actualPosition) + extraData::planeD(extraData::XZn, extraData::aux))*(glm::dot(extraData::XZn, myPM.points[i][j].lastPosition) + extraData::planeD(extraData::XZn, extraData::aux))) <= 0) {
+			if (((glm::dot(extraData::XZn, myPM.points[i][j].lastPosition) + extraData::planeD(extraData::XZn, extraData::aux))*(glm::dot(extraData::XZn, myPM.points[i][j].actualPosition) + extraData::planeD(extraData::XZn, extraData::aux))) <= 0) {
 
-				myPM.points[i][j].newPosition = myPM.points[i][j].lastPosition - 2 * (glm::dot(extraData::XZn, myPM.points[i][j].lastPosition) + extraData::planeD(extraData::XZn, extraData::aux))*extraData::XZn;
+				myPM.points[i][j].newPosition = myPM.points[i][j].lastPosition - 1 * (glm::dot(extraData::XZn, myPM.points[i][j].lastPosition) + extraData::planeD(extraData::XZn, extraData::aux))*extraData::XZn;
 				//MyPS.velF[i] = MyPS.velF[i] - 2 * (glm::dot(extraData::XZn, MyPS.velF[i]))*extraData::XZn;
 			}
 
