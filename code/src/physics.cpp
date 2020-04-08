@@ -42,15 +42,17 @@ namespace {
 	} myPS;*/
 
 	static struct MeshPoint {
-		glm::vec3 position;
+		glm::vec3 newPosition;
+		glm::vec3 actualPosition;
+		glm::vec3 lastPosition;
 		glm::vec3 totalForce; //total
 		glm::vec3 structuralForce; //horitzontals i verticals
 		glm::vec3 shearForce; //diagonals
 		glm::vec3 bendingForce; //contaria?
 		float mass = 1;
-		glm::vec3 lastPosition;
-		glm::vec3 velocity;
-		glm::vec3 lastVelocity;
+		
+		/*glm::vec3 velocity;
+		glm::vec3 lastVelocity;*/
 
 		MeshPoint *rightPoint;
 		MeshPoint *leftPoint;
@@ -74,7 +76,7 @@ namespace {
 void updateMyPMPointsPositions() {
 	for (int i = 0; i < 18; i++) {
 		for (int j = 0; j < 14; j++) {
-			myPM.pointsPositions[i * 14 + j] = glm::vec3(myPM.points[i][j].position.x, myPM.points[i][j].position.y, myPM.points[i][j].position.z);
+			myPM.pointsPositions[i * 14 + j] = glm::vec3(myPM.points[i][j].actualPosition.x, myPM.points[i][j].actualPosition.y, myPM.points[i][j].actualPosition.z);
 		}
 	}
 }
@@ -93,13 +95,13 @@ void MyPhysicsInit() {
 
 	for (int i = 0; i < 18; i++) {
 		for (int j = 0; j < 14; j++) {
-			myPM.points[i][j].position.x = i * 0.5f - 17 * 0.5f * 0.5f; //posicio inicial = horitzontal i elevat
-			myPM.points[i][j].position.y = 9;
-			myPM.points[i][j].position.z = j * 0.5f - 13 * 0.5f * 0.5f;
-			myPM.points[i][j].lastPosition = myPM.points[i][j].position;
+			myPM.points[i][j].actualPosition.x = i * 0.5f - 17 * 0.5f * 0.5f; //posicio inicial = horitzontal i elevat
+			myPM.points[i][j].actualPosition.y = 9;
+			myPM.points[i][j].actualPosition.z = j * 0.5f - 13 * 0.5f * 0.5f;
+			myPM.points[i][j].lastPosition = myPM.points[i][j].actualPosition;
 
-			myPM.points[i][j].velocity = glm::vec3(0,0,0); //velocitat inicial = 0
-			myPM.points[i][j].lastVelocity = myPM.points[i][j].velocity;
+			//myPM.points[i][j].velocity = glm::vec3(0,0,0); //velocitat inicial = 0
+			//myPM.points[i][j].lastVelocity = myPM.points[i][j].velocity;
 			myPM.points[i][j].totalForce = glm::vec3(0, myPM.gravity, 0); //for�a total inicial = gravetat
 			myPM.points[i][j].shearForce = glm::vec3(0, 0, 0);
 			myPM.points[i][j].structuralForce = glm::vec3(0, 0, 0);
@@ -114,14 +116,14 @@ void MyPhysicsInit() {
 
 void MyPhysicsUpdate(float dt) {
 	
+	//actualitza posicions
 	for (int i = 0; i < 18; i++) {
 		for (int j = 0; j < 14; j++) {
 
-
-			myPM.points[i][j].velocity = myPM.points[i][j].lastVelocity + dt * myPM.points[i][j].totalForce / myPM.points[i][j].mass; //seguent velocitat
-			myPM.points[i][j].lastVelocity = myPM.points[i][j].velocity;
-			myPM.points[i][j].position = myPM.points[i][j].lastPosition + dt * myPM.points[i][j].velocity; //seguent posicio
-			myPM.points[i][j].lastPosition = myPM.points[i][j].position;
+			
+			myPM.points[i][j].newPosition = myPM.points[i][j].actualPosition + (myPM.points[i][j].actualPosition - myPM.points[i][j].lastPosition) + (myPM.points[i][j].totalForce / myPM.points[i][j].mass)*glm::pow(dt, 2);
+			myPM.points[i][j].lastPosition = myPM.points[i][j].actualPosition;
+			myPM.points[i][j].actualPosition = myPM.points[i][j].newPosition;
 		}
 	}
 
