@@ -36,10 +36,10 @@ namespace {
 		float max = 10.f;
 	} p_pars;
 
-	static struct ParticleSystem {
+	/*static struct ParticleSystem {
 		glm::vec3 *position;
 		int numParticles;
-	} myPS;
+	} myPS;*/
 
 	static struct MeshPoint {
 		glm::vec3 position;
@@ -47,7 +47,10 @@ namespace {
 		glm::vec3 structuralForce; //horitzontals i verticals
 		glm::vec3 shearForce; //diagonals
 		glm::vec3 bendingForce; //contaria?
-		float mass;
+		float mass = 1;
+		glm::vec3 lastPosition;
+		glm::vec3 velocity;
+		glm::vec3 lastVelocity;
 
 		MeshPoint *rightPoint;
 		MeshPoint *leftPoint;
@@ -59,15 +62,22 @@ namespace {
 
 		MeshPoint **previusPoints;//punts anteriors
 		MeshPoint **actualPoints;//punts actuals
-		MeshPoint **nextPoints;//punts següents
+		MeshPoint **nextPoints;//punts segï¿½ents
 
 		glm::vec3 *pointsPositions;//?
 		float kEslatic = 1;
 		float kDump = 1;
+		float gravity = -9.81;
 
 	} myPM;
 }
-
+void updateMyPMPointsPositions() {
+	for (int i = 0; i < 18; i++) {
+		for (int j = 0; j < 14; j++) {
+			myPM.pointsPositions[i * 14 + j] = glm::vec3(myPM.points[i][j].position.x, myPM.points[i][j].position.y, myPM.points[i][j].position.z);
+		}
+	}
+}
 ////////////////////
 
 void MyPhysicsInit() {
@@ -83,53 +93,42 @@ void MyPhysicsInit() {
 
 	for (int i = 0; i < 18; i++) {
 		for (int j = 0; j < 14; j++) {
-			myPM.actualPoints[i][j].position.x = i * 0.5f - 17 * 0.5f * 0.5f;
-			myPM.actualPoints[i][j].position.y = 9;
-			myPM.actualPoints[i][j].position.z = j * 0.5f - 13 * 0.5f * 0.5f;
-			myPM.pointsPositions[i*14 + j] = glm::vec3(myPM.actualPoints[i][j].position.x, myPM.actualPoints[i][j].position.y, myPM.actualPoints[i][j].position.z);
-			
+			myPM.points[i][j].position.x = i * 0.5f - 17 * 0.5f * 0.5f; //posicio inicial = horitzontal i elevat
+			myPM.points[i][j].position.y = 9;
+			myPM.points[i][j].position.z = j * 0.5f - 13 * 0.5f * 0.5f;
+			myPM.points[i][j].lastPosition = myPM.points[i][j].position;
+
+			myPM.points[i][j].velocity = glm::vec3(0,0,0); //velocitat inicial = 0
+			myPM.points[i][j].lastVelocity = myPM.points[i][j].velocity;
+			myPM.points[i][j].totalForce = glm::vec3(0, myPM.gravity, 0); //forï¿½a total inicial = gravetat
+			myPM.points[i][j].shearForce = glm::vec3(0, 0, 0);
+			myPM.points[i][j].structuralForce = glm::vec3(0, 0, 0);
+		    myPM.points[i][j].bendingForce = glm::vec3(0, 0, 0);
 		}
 	}
+	updateMyPMPointsPositions();
 	ClothMesh::updateClothMesh(&(myPM.pointsPositions[0].x));
 
-	//ClothMesh::updateClothMesh(&(myPM.points[0][0].position.x));
-	//ClothMesh::updateClothMesh(&(myPS.position[0].x));
 
-	//for (int i = 0; i < 18; i++) {
-	//	for (int j = 0; j < 14; j++) {
-	//		myPM.points[i][j].position.x = myPM.points[i][j].position.x + j * 0.5;
-	//		myPM.points[i][j].position.y = 5;
-	//		myPM.points[i][j].position.z = myPM.points[i][j].position.z + i * 0.5;
-
-	//		//myPS.position[i + j] = glm::vec3(i, 5, j);
-	//	}
-
-	//}
-	//ClothMesh::updateClothMesh(&(myPS.position[0].x));
-	//ClothMesh::updateClothMesh(&(myPM.points[0][0].position.x));
 }
 
 void MyPhysicsUpdate(float dt) {
 	
-	//verlet
 	for (int i = 0; i < 18; i++) {
 		for (int j = 0; j < 14; j++) {
-			//caluclar força total
 
 
-			//canviar posicions
-			//posicionSiguiente=posicionActual + (posicionActual - posicionAnterior) + (f/m)* dt^2
-			//FALTA dt QUE NO SE QUE ES
-			//myPM.nextPoints[i][j].position = myPM.actualPoints[i][j].position + (myPM.actualPoints[i][j].position - myPM.previusPoints[i][j].position) + (myPM.actualPoints[i][j].totalForce / myPM.actualPoints[i][j].mass)/* * dt^2 */;
-
+			myPM.points[i][j].velocity = myPM.points[i][j].lastVelocity + dt * myPM.points[i][j].totalForce / myPM.points[i][j].mass; //seguent velocitat
+			myPM.points[i][j].lastVelocity = myPM.points[i][j].velocity;
+			myPM.points[i][j].position = myPM.points[i][j].lastPosition + dt * myPM.points[i][j].velocity; //seguent posicio
+			myPM.points[i][j].lastPosition = myPM.points[i][j].position;
 		}
 	}
 
 
-
-
+	updateMyPMPointsPositions();
+	ClothMesh::updateClothMesh(&(myPM.pointsPositions[0].x));
 	
-	//ClothMesh::updateClothMesh(&(myPM.points[0][0].position.x));
 }
 
 void MyPhysicsCleanup() {
