@@ -3,6 +3,7 @@
 #include <glm\glm.hpp>
 //#include <glm\vec3.hpp>
 #include <iostream>
+#include <glm/gtx/intersect.hpp>
 
 
 //Exemple
@@ -26,6 +27,15 @@ void GUI() {
 	ImGui::End();
 }
 
+namespace Sphere {
+	glm::vec3 c = glm::vec3(0, 1, 0); //centro esfera
+	float r = 1; //radio esfera 
+
+	extern void setupSphere(glm::vec3 pos, float rad);
+	extern void cleanupSphere();
+	extern void updateSphere(glm::vec3 pos, float rad);
+}
+
 namespace ClothMesh {
 	extern void setupClothMesh();
 	extern void cleanupClothMesh();
@@ -34,6 +44,7 @@ namespace ClothMesh {
 }
 
 namespace extraData {
+	float indiceRebote = 1;
 
 	//planos
 	glm::vec3 XYn = glm::vec3(0, 0, 1);//normal de plano XY es Z
@@ -178,11 +189,26 @@ void MyPhysicsUpdate(float dt) {
 			//plano tierra                                     positionI                                                                                                        positionF
 			if (((glm::dot(extraData::XZn, myPM.points[i][j].lastPosition) + extraData::planeD(extraData::XZn, extraData::aux))*(glm::dot(extraData::XZn, myPM.points[i][j].actualPosition) + extraData::planeD(extraData::XZn, extraData::aux))) <= 0) {
 
-				myPM.points[i][j].newPosition = myPM.points[i][j].lastPosition - 1 * (glm::dot(extraData::XZn, myPM.points[i][j].lastPosition) + extraData::planeD(extraData::XZn, extraData::aux))*extraData::XZn;
-				//MyPS.velF[i] = MyPS.velF[i] - 2 * (glm::dot(extraData::XZn, MyPS.velF[i]))*extraData::XZn;
+				myPM.points[i][j].newPosition = myPM.points[i][j].lastPosition - extraData::indiceRebote * (glm::dot(extraData::XZn, myPM.points[i][j].lastPosition) + extraData::planeD(extraData::XZn, extraData::aux))*extraData::XZn;
+				
 			}
+			renderSphere = true;
+			//Colisiones esfera
+			if (renderSphere) {
+				Sphere::updateSphere(Sphere::c, Sphere::r);
+				glm::vec3 nPlane = (myPM.points[i][j].lastPosition - Sphere::c);
 
+				if (glm::sqrt(glm::pow(nPlane.x, 2) + glm::pow(nPlane.y, 2) + glm::pow(nPlane.z, 2)) <= Sphere::r) {
+					glm::vec3 punto;
+					glm::vec3 normal;
+					glm::intersectLineSphere(myPM.points[i][j].actualPosition, myPM.points[i][j].lastPosition, Sphere::c, Sphere::r, punto, normal);
+					float D = -(normal.x*punto.x + normal.y*punto.y + normal.z*punto.z);
 
+					myPM.points[i][j].newPosition = myPM.points[i][j].actualPosition - extraData::indiceRebote * (glm::dot(normal, myPM.points[i][j].actualPosition) + D)*normal;
+					
+				}
+
+			}
 
 
 
