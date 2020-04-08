@@ -4,6 +4,7 @@
 //#include <glm\vec3.hpp>
 #include <iostream>
 
+
 //Exemple
 extern void Exemple_GUI();
 extern void Exemple_PhysicsInit();
@@ -30,6 +31,33 @@ namespace ClothMesh {
 	extern void cleanupClothMesh();
 	extern void updateClothMesh(float* array_data);
 	extern void drawClothMesh();
+}
+
+namespace extraData {
+
+	//planos
+	glm::vec3 XYn = glm::vec3(0, 0, 1);//normal de plano XY es Z
+	glm::vec3 YZn = glm::vec3(1, 0, 0);
+	glm::vec3 XZn = glm::vec3(0, 1, 0);
+	glm::vec3 negYZn = glm::vec3(-1, 0, 0);
+	glm::vec3 negXYn = glm::vec3(0, 0, -1);
+	glm::vec3 negXZn = glm::vec3(0, -1, 0);
+
+	glm::vec3 aux = glm::vec3(-5, 0, -5);
+	glm::vec3 aux2 = glm::vec3(-5, 0, 5);
+	glm::vec3 aux3 = glm::vec3(5, 0, -5);
+	glm::vec3 aux4 = glm::vec3(-5, 10, -5);
+	glm::vec3 vX1 = aux - aux2;
+	glm::vec3 vX2 = aux - aux3;
+	
+
+	//esfera
+	//glm::vec3 auxEsf;
+
+	float planeD(glm::vec3 normal, glm::vec3 point) {
+		return -(normal.x*point.x + normal.y*point.y + normal.z*point.z);
+	}
+
 }
 
 namespace {
@@ -142,11 +170,33 @@ void MyPhysicsUpdate(float dt) {
 
 			
 			myPM.points[i][j].newPosition = myPM.points[i][j].actualPosition + (myPM.points[i][j].actualPosition - myPM.points[i][j].lastPosition) + (myPM.points[i][j].totalForce / myPM.points[i][j].mass)*glm::pow(dt, 2);
-			myPM.points[i][j].lastPosition = myPM.points[i][j].actualPosition;
 			
+
+
+			//Colisions
+
+			//plano tierra                                     positionI                                                                                                        positionF
+			if (((glm::dot(extraData::XZn, myPM.points[i][j].actualPosition) + extraData::planeD(extraData::XZn, extraData::aux))*(glm::dot(extraData::XZn, myPM.points[i][j].lastPosition) + extraData::planeD(extraData::XZn, extraData::aux))) <= 0) {
+
+				myPM.points[i][j].newPosition = myPM.points[i][j].lastPosition - 2 * (glm::dot(extraData::XZn, myPM.points[i][j].lastPosition) + extraData::planeD(extraData::XZn, extraData::aux))*extraData::XZn;
+				//MyPS.velF[i] = MyPS.velF[i] - 2 * (glm::dot(extraData::XZn, MyPS.velF[i]))*extraData::XZn;
+			}
+
+
+
+
+
+			//Calcular forçes
+
+
+
+			//Actualitzar posició
+			myPM.points[i][j].lastPosition = myPM.points[i][j].actualPosition;
+
 			myPM.points[i][j].velocity = (myPM.points[i][j].newPosition - myPM.points[i][j].actualPosition) / dt;
 
-		    myPM.points[i][j].actualPosition = myPM.points[i][j].newPosition;
+			myPM.points[i][j].actualPosition = myPM.points[i][j].newPosition;
+
 		}
 	}
 
