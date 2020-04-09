@@ -46,10 +46,6 @@ namespace {
 		float max = 10.f;
 	} p_pars;
 
-	/*static struct ParticleSystem {
-		glm::vec3 *position;
-		int numParticles;
-	} myPS;*/
 
 	static struct MeshPoint {
 		glm::vec3 newPosition;
@@ -62,7 +58,7 @@ namespace {
 		float mass = 1;
 		
 		glm::vec3 velocity;
-		//glm::vec3 lastVelocity;
+	
 
 		MeshPoint *rightPoint;
 		MeshPoint *leftPoint;
@@ -102,7 +98,7 @@ glm::vec3 getSpringForce(MeshPoint P1, MeshPoint P2 , float L12) {
 	glm::vec3 auxVec3 =  (P1.actualPosition-P2.actualPosition) / glm::length<float>(P1.actualPosition - P2.actualPosition);
 	float firstComponent = myPM.kEslatic * (glm::length<float>(P1.actualPosition - P2.actualPosition) - L12);
 	float secondComponent = myPM.kDump * (glm::dot<float>(auxVec3,P1.velocity-P2.velocity));
-	//secondComponent = 0;
+	
 	return -(firstComponent + secondComponent) * auxVec3;
 }
 ////////////////////
@@ -125,10 +121,6 @@ namespace extraData {
 	glm::vec3 vX1 = aux - aux2;
 	glm::vec3 vX2 = aux - aux3;
 
-
-	//esfera
-	//glm::vec3 auxEsf;
-
 	float planeD(glm::vec3 normal, glm::vec3 point) {
 		return -(normal.x*point.x + normal.y*point.y + normal.z*point.z);
 	}
@@ -138,7 +130,6 @@ namespace extraData {
 
 
 void MyPhysicsInit() {
-	//myPS.position = new glm::vec3[14*18];
 
 	ClothMesh::setupClothMesh();
 
@@ -157,7 +148,6 @@ void MyPhysicsInit() {
 			myPM.points[i][j].lastPosition = myPM.points[i][j].actualPosition;
 
 			myPM.points[i][j].velocity = glm::vec3(0,0,0); //velocitat inicial = 0
-			//myPM.points[i][j].stopViaSolution = false;
 			myPM.points[i][j].type = 0;
 
 			//types i pointers
@@ -658,7 +648,7 @@ void MyPhysicsUpdate(float dt) {
 
 				//Colisions
 
-				//plano tierra                                     positionI                                                                                                        positionF
+				//plano tierra                                                                                                                                       
 				if (((glm::dot(extraData::XZn, myPM.points[i][j].actualPosition) + extraData::planeD(extraData::XZn, extraData::aux))*(glm::dot(extraData::XZn, myPM.points[i][j].newPosition) + extraData::planeD(extraData::XZn, extraData::aux))) <= 0) {
 
 					myPM.points[i][j].newPosition = myPM.points[i][j].newPosition - (1 + myPM.E) * (glm::dot(extraData::XZn, myPM.points[i][j].newPosition) + extraData::planeD(extraData::XZn, extraData::aux))*extraData::XZn;
@@ -722,8 +712,6 @@ void MyPhysicsUpdate(float dt) {
 			}
 		}
 	}
-	//std::cout << dt << std::endl;
-
 	updateMyPMPointsPositions();
 	ClothMesh::updateClothMesh(&(myPM.pointsPositions[0].x));
 	
