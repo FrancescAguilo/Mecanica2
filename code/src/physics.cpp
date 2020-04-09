@@ -71,10 +71,7 @@ namespace {
 
 		int type; //del 1 al 25
 
-		/*float LtoRight;
-		float LtoLeft;
-		float LtoUp;
-		float LtoDown;*/
+	
 
 	};
 
@@ -88,6 +85,7 @@ namespace {
 		float shearSpringLength = glm::sqrt(glm::pow(structuralSpringLength,2)*2);
 		float bendingSpringLength = structuralSpringLength * 2;
 		float dtReductor = 0.1f;
+		float E = 0.05f;
 
 	} myPM;
 }
@@ -663,37 +661,37 @@ void MyPhysicsUpdate(float dt) {
 				//plano tierra                                     positionI                                                                                                        positionF
 				if (((glm::dot(extraData::XZn, myPM.points[i][j].actualPosition) + extraData::planeD(extraData::XZn, extraData::aux))*(glm::dot(extraData::XZn, myPM.points[i][j].newPosition) + extraData::planeD(extraData::XZn, extraData::aux))) <= 0) {
 
-					myPM.points[i][j].newPosition = myPM.points[i][j].newPosition - 2 * (glm::dot(extraData::XZn, myPM.points[i][j].newPosition) + extraData::planeD(extraData::XZn, extraData::aux))*extraData::XZn;
+					myPM.points[i][j].newPosition = myPM.points[i][j].newPosition - (1 + myPM.E) * (glm::dot(extraData::XZn, myPM.points[i][j].newPosition) + extraData::planeD(extraData::XZn, extraData::aux))*extraData::XZn;
 
 				}
 
 				//plano derecha
 				if (((glm::dot(extraData::negYZn, myPM.points[i][j].actualPosition) + extraData::planeD(extraData::negYZn, extraData::aux3))*(glm::dot(extraData::negYZn, myPM.points[i][j].newPosition) + extraData::planeD(extraData::negYZn, extraData::aux3))) <= 0) {
-					myPM.points[i][j].newPosition = myPM.points[i][j].newPosition - 2 * (glm::dot(extraData::negYZn, myPM.points[i][j].newPosition) + extraData::planeD(extraData::negYZn, extraData::aux3))*extraData::negYZn;
+					myPM.points[i][j].newPosition = myPM.points[i][j].newPosition - (1 + myPM.E) * (glm::dot(extraData::negYZn, myPM.points[i][j].newPosition) + extraData::planeD(extraData::negYZn, extraData::aux3))*extraData::negYZn;
 
 				}
 
 				//plano delante
 				if (((glm::dot(extraData::negXYn, myPM.points[i][j].actualPosition) + extraData::planeD(extraData::negXYn, extraData::aux3))*(glm::dot(extraData::negXYn, myPM.points[i][j].newPosition) + extraData::planeD(extraData::negXYn, extraData::aux3))) <= 0) {
-					myPM.points[i][j].newPosition = myPM.points[i][j].newPosition - 2 * (glm::dot(extraData::negXYn, myPM.points[i][j].newPosition) + extraData::planeD(extraData::negXYn, extraData::aux3))*extraData::negXYn;
+					myPM.points[i][j].newPosition = myPM.points[i][j].newPosition - (1 + myPM.E) * (glm::dot(extraData::negXYn, myPM.points[i][j].newPosition) + extraData::planeD(extraData::negXYn, extraData::aux3))*extraData::negXYn;
 
 				}
 
 				//plano detras
 				if (((glm::dot(extraData::XYn, myPM.points[i][j].actualPosition) + extraData::planeD(extraData::XYn, extraData::aux2))*(glm::dot(extraData::XYn, myPM.points[i][j].newPosition) + extraData::planeD(extraData::XYn, extraData::aux2))) <= 0) {
-					myPM.points[i][j].newPosition = myPM.points[i][j].newPosition - 2 * (glm::dot(extraData::XYn, myPM.points[i][j].newPosition) + extraData::planeD(extraData::XYn, extraData::aux2))*extraData::XYn;
+					myPM.points[i][j].newPosition = myPM.points[i][j].newPosition - (1 + myPM.E) * (glm::dot(extraData::XYn, myPM.points[i][j].newPosition) + extraData::planeD(extraData::XYn, extraData::aux2))*extraData::XYn;
 
 				}
 
 				//plano izquierda
 				if (((glm::dot(extraData::YZn, myPM.points[i][j].actualPosition) + extraData::planeD(extraData::YZn, extraData::aux2))*(glm::dot(extraData::YZn, myPM.points[i][j].newPosition) + extraData::planeD(extraData::YZn, extraData::aux2))) <= 0) {
-					myPM.points[i][j].newPosition = myPM.points[i][j].newPosition - 2 * (glm::dot(extraData::YZn, myPM.points[i][j].newPosition) + extraData::planeD(extraData::YZn, extraData::aux2))*extraData::YZn;
+					myPM.points[i][j].newPosition = myPM.points[i][j].newPosition - (1 + myPM.E) * (glm::dot(extraData::YZn, myPM.points[i][j].newPosition) + extraData::planeD(extraData::YZn, extraData::aux2))*extraData::YZn;
 
 				}
 
 				//plano arriba
 				if (((glm::dot(extraData::negXZn, myPM.points[i][j].actualPosition) + extraData::planeD(extraData::negXZn, extraData::aux4))*(glm::dot(extraData::negXZn, myPM.points[i][j].newPosition) + extraData::planeD(extraData::negXZn, extraData::aux4))) <= 0) {
-					myPM.points[i][j].newPosition = myPM.points[i][j].newPosition - 2 * (glm::dot(extraData::negXZn, myPM.points[i][j].newPosition) + extraData::planeD(extraData::negXZn, extraData::aux4))*extraData::negXZn;
+					myPM.points[i][j].newPosition = myPM.points[i][j].newPosition - (1 + myPM.E) * (glm::dot(extraData::negXZn, myPM.points[i][j].newPosition) + extraData::planeD(extraData::negXZn, extraData::aux4))*extraData::negXZn;
 
 				}
 
@@ -709,7 +707,7 @@ void MyPhysicsUpdate(float dt) {
 						glm::intersectLineSphere(myPM.points[i][j].newPosition, myPM.points[i][j].actualPosition, Sphere::c, Sphere::r, punto, normal);
 						float D = -(normal.x*punto.x + normal.y*punto.y + normal.z*punto.z);
 
-						myPM.points[i][j].newPosition = myPM.points[i][j].newPosition - extraData::indiceRebote * (glm::dot(normal, myPM.points[i][j].newPosition) + D)*normal;
+						myPM.points[i][j].newPosition = myPM.points[i][j].newPosition - (1 + myPM.E) * (glm::dot(normal, myPM.points[i][j].newPosition) + D)*normal;
 
 					}
 
@@ -733,12 +731,30 @@ void MyPhysicsUpdate(float dt) {
 
 void MyPhysicsCleanup() {
 	ClothMesh::cleanupClothMesh();
+
+	for (int i = 0; i < 18; i++) {
+		for (int j = 0; j < 14; j++) {
+
+			delete myPM.points[i][j].downPoint;
+			myPM.points[i][j].downPoint = nullptr;
+
+			delete myPM.points[i][j].upPoint;
+			myPM.points[i][j].upPoint = nullptr;
+
+			delete myPM.points[i][j].leftPoint;
+			myPM.points[i][j].leftPoint = nullptr;
+			
+			delete myPM.points[i][j].rightPoint;
+			myPM.points[i][j].rightPoint = nullptr;
+		}
+	}
+
+	for (int i = 0; i < 18; i++) delete[] myPM.points[i];
 	delete[] myPM.points;
+	delete[] myPM.pointsPositions;
+
+
 }
-
-
-
-
 
 
 /////////////////////////////////
