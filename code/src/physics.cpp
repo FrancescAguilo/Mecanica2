@@ -62,6 +62,7 @@ namespace {
 		MeshPoint *downPoint;
 
 		bool stopViaSolution;
+		int type; //del 1 al 25
 
 		/*float LtoRight;
 		float LtoLeft;
@@ -109,7 +110,8 @@ void MyPhysicsInit() {
 		myPM.points[i] = new MeshPoint[14];
 	}
 	myPM.pointsPositions = new glm::vec3[14*18];
-
+	std::cout << "Mapa de Tipos: " << std::endl;
+	std::cout << "-----------------------------------------" << std::endl;
 	for (int i = 0; i < 18; i++) {
 		for (int j = 0; j < 14; j++) {
 			myPM.points[i][j].actualPosition.x = i * 0.5f - 17 * 0.5f * 0.5f; //posicio inicial = horitzontal i elevat
@@ -119,23 +121,102 @@ void MyPhysicsInit() {
 
 			myPM.points[i][j].velocity = glm::vec3(0,0,0); //velocitat inicial = 0
 			myPM.points[i][j].stopViaSolution = false;
-			//myPM.points[i][j].totalForce = glm::vec3(0, 0/*myPM.gravity*/, 0); //força total inicial = gravetat
-			//myPM.points[i][j].shearForce = glm::vec3(0, 0, 0);
-			//myPM.points[i][j].structuralForce = glm::vec3(0, 0, 0);
-		 //   myPM.points[i][j].bendingForce = glm::vec3(0, 0, 0);
+			myPM.points[i][j].type = 0;
 
+			//types i pointers
 			//pointers laterals
 			if (i == 0) {
 				myPM.points[i][j].leftPoint = nullptr;
 				myPM.points[i][j].rightPoint = &myPM.points[i + 1][j];
+				if (j > 1 && j < 12) {
+					myPM.points[i][j].type = 3;
+				}
+				else if (j == 1) {
+					myPM.points[i][j].type = 15;
+				}
+				else if (j == 12) {
+					myPM.points[i][j].type = 14;
+				}
+				else if (j == 0) {
+					myPM.points[i][j].type = 2;
+				}
+				else if (j == 13) {
+					myPM.points[i][j].type = 1;
+				}
 			}
 			else if (i == 17) {
 				myPM.points[i][j].leftPoint = &myPM.points[i - 1][j];
 				myPM.points[i][j].rightPoint = nullptr;
+				if (j > 1 && j < 12) {
+					myPM.points[i][j].type = 6;
+				}
+				else if (j == 1) {
+					myPM.points[i][j].type = 17;
+				}
+				else if (j == 12) {
+					myPM.points[i][j].type = 16;
+				}
+				else if (j == 0) {
+					myPM.points[i][j].type = 5;
+				}
+				else if (j == 13) {
+					myPM.points[i][j].type = 4;
+				}
 			}
 			else {
 				myPM.points[i][j].leftPoint = &myPM.points[i-1][j];
 				myPM.points[i][j].rightPoint = &myPM.points[i+1][j];
+				if (i == 1) {
+					if (j > 1 && j < 12) {
+						myPM.points[i][j].type = 22;
+					}
+					else if (j == 1) {
+						myPM.points[i][j].type = 20;
+					}
+					else if (j == 12) {
+						myPM.points[i][j].type = 18;
+					}
+					else if (j == 0) {
+						myPM.points[i][j].type = 12;
+					}
+					else if (j == 13) {
+						myPM.points[i][j].type = 10;
+					}
+				}
+				else if (i == 16) {
+					if (j > 1 && j < 12) {
+						myPM.points[i][j].type = 23;
+					}
+					else if (j == 1) {
+						myPM.points[i][j].type = 21;
+					}
+					else if (j == 12) {
+						myPM.points[i][j].type = 19;
+					}
+					else if (j == 0) {
+						myPM.points[i][j].type = 13;
+					}
+					else if (j == 13) {
+						myPM.points[i][j].type = 11;
+					}
+				}
+				else {
+					if (j > 1 && j < 12) {
+						myPM.points[i][j].type = 9;
+					}
+					else if (j == 1) {
+						myPM.points[i][j].type = 25;
+					}
+					else if (j == 12) {
+						myPM.points[i][j].type = 24;
+					}
+					else if (j == 0) {
+						myPM.points[i][j].type = 8;
+					}
+					else if (j == 13) {
+						myPM.points[i][j].type = 7;
+					}
+				}
 			}
 
 			//pointers verticals
@@ -151,28 +232,15 @@ void MyPhysicsInit() {
 				myPM.points[i][j].downPoint = &myPM.points[i][j-1];
 				myPM.points[i][j].upPoint = &myPM.points[i][j+1];
 			}
+			if (myPM.points[i][j].type < 10)
+				std::cout << " ";
+		    std::cout << myPM.points[i][j].type << " ";
+
 		}
+		std::cout << std::endl;
 	}
-	//for (int i = 0; i < 18; i++) {
-	//	for (int j = 0; j < 14; j++) {
-	//		//Longituds
 
-	//		if (myPM.points[i][j].leftPoint != nullptr) {
-	//			myPM.points[i][j].LtoLeft = glm::length<float>(myPM.points[i][j].actualPosition- myPM.points[i-1][j].actualPosition);
-	//		}
-	//		if (myPM.points[i][j].rightPoint != nullptr) {
-	//			myPM.points[i][j].LtoRight = glm::length<float>(myPM.points[i][j].actualPosition - myPM.points[i + 1][j].actualPosition);
-	//		}
-	//		if (myPM.points[i][j].downPoint != nullptr) {
-	//			myPM.points[i][j].LtoDown = glm::length<float>(myPM.points[i][j].actualPosition - myPM.points[i][j-1].actualPosition);
-	//		}
-	//		if (myPM.points[i][j].upPoint != nullptr) {
-	//			myPM.points[i][j].LtoUp = glm::length<float>(myPM.points[i][j].actualPosition - myPM.points[i][j+1].actualPosition);
-	//		}
-	//		
-	//	}
-	//}
-
+	std::cout << "-----------------------------------------" << std::endl;
 	updateMyPMPointsPositions();
 	ClothMesh::updateClothMesh(&(myPM.pointsPositions[0].x));
 
