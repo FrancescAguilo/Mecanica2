@@ -44,7 +44,7 @@ namespace ClothMesh {
 }
 
 namespace extraData {
-	float indiceRebote = 1;
+	float indiceRebote = 2;
 
 	//planos
 	glm::vec3 XYn = glm::vec3(0, 0, 1);//normal de plano XY es Z
@@ -170,6 +170,7 @@ void MyPhysicsInit() {
 }
 
 void MyPhysicsUpdate(float dt) {
+	//dt = dt * 0.025;
 	//forçes
 	//getSpringForce(glm::vec3(2, 2, 2), glm::vec3(2, 2, 1), 0);
 
@@ -179,8 +180,8 @@ void MyPhysicsUpdate(float dt) {
 	for (int i = 0; i < 18; i++) {
 		for (int j = 0; j < 14; j++) {
 
-			
 			myPM.points[i][j].newPosition = myPM.points[i][j].actualPosition + (myPM.points[i][j].actualPosition - myPM.points[i][j].lastPosition) + (myPM.points[i][j].totalForce / myPM.points[i][j].mass)*glm::pow(dt, 2);
+			//std::cout << "ANTES DE COLISION" << myPM.points[i][j].newPosition.x << "," << myPM.points[i][j].newPosition.y << "," << myPM.points[i][j].newPosition.z << std::endl;
 			
 
 
@@ -188,11 +189,16 @@ void MyPhysicsUpdate(float dt) {
 
 			//plano tierra                                     positionI                                                                                                        positionF
 			if (((glm::dot(extraData::XZn, myPM.points[i][j].lastPosition) + extraData::planeD(extraData::XZn, extraData::aux))*(glm::dot(extraData::XZn, myPM.points[i][j].actualPosition) + extraData::planeD(extraData::XZn, extraData::aux))) <= 0) {
+				//std::cout << "COLISION" << std::endl;
+				//std::cout << "ANTES:" << myPM.points[i][j].newPosition.x << "," << myPM.points[i][j].newPosition.y << "," << myPM.points[i][j].newPosition.z << std::endl;
 
-				myPM.points[i][j].newPosition = myPM.points[i][j].lastPosition - extraData::indiceRebote * (glm::dot(extraData::XZn, myPM.points[i][j].lastPosition) + extraData::planeD(extraData::XZn, extraData::aux))*extraData::XZn;
+				myPM.points[i][j].newPosition = myPM.points[i][j].actualPosition - 2 * (glm::dot(extraData::XZn , myPM.points[i][j].actualPosition) + extraData::planeD(extraData::XZn, extraData::aux))*extraData::XZn;
+				
+				//std::cout << "DESPUES DE COLISION:" << myPM.points[i][j].newPosition.x << "," << myPM.points[i][j].newPosition.y << "," << myPM.points[i][j].newPosition.z << "\n" <<std::endl;
 				
 			}
-			renderSphere = true;
+
+			//renderSphere = true;
 			//Colisiones esfera
 			if (renderSphere) {
 				Sphere::updateSphere(Sphere::c, Sphere::r);
@@ -211,7 +217,6 @@ void MyPhysicsUpdate(float dt) {
 			}
 
 
-
 			//Calcular forçes
 
 
@@ -225,7 +230,7 @@ void MyPhysicsUpdate(float dt) {
 
 		}
 	}
-
+	std::cout << "POSICION" << myPM.points[5][5].newPosition.x << "," << myPM.points[5][5].newPosition.y << "," << myPM.points[5][5].newPosition.z << "\n" << std::endl;
 
 	updateMyPMPointsPositions();
 	ClothMesh::updateClothMesh(&(myPM.pointsPositions[0].x));
