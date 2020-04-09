@@ -1,8 +1,8 @@
 #include <imgui\imgui.h>
 #include <imgui\imgui_impl_sdl_gl3.h>
 #include <glm\glm.hpp>
-//#include <glm\vec3.hpp>
 #include <iostream>
+#include <glm\gtx\intersect.hpp>
 
 //Exemple
 extern void Exemple_GUI();
@@ -23,6 +23,14 @@ void GUI() {
 	}
 
 	ImGui::End();
+}
+namespace Sphere {
+	glm::vec3 c = glm::vec3(0, 1, 0); //centro esfera
+	float r = 1; //radio esfera 
+
+	extern void setupSphere(glm::vec3 pos, float rad);
+	extern void cleanupSphere();
+	extern void updateSphere(glm::vec3 pos, float rad);
 }
 
 namespace ClothMesh {
@@ -74,7 +82,7 @@ namespace {
 		MeshPoint **points;
 		glm::vec3 *pointsPositions;
 		float kEslatic = 400;
-		float kDump = 100;
+		float kDump = 200;
 		float gravity = -9.81;
 		float structuralSpringLength = 0.5f;
 		float shearSpringLength = glm::sqrt(glm::pow(structuralSpringLength,2)*2);
@@ -100,6 +108,36 @@ glm::vec3 getSpringForce(MeshPoint P1, MeshPoint P2 , float L12) {
 	return -(firstComponent + secondComponent) * auxVec3;
 }
 ////////////////////
+
+namespace extraData {
+	float indiceRebote = 2;
+
+	//planos
+	glm::vec3 XYn = glm::vec3(0, 0, 1);//normal de plano XY es Z
+	glm::vec3 YZn = glm::vec3(1, 0, 0);
+	glm::vec3 XZn = glm::vec3(0, 1, 0);
+	glm::vec3 negYZn = glm::vec3(-1, 0, 0);
+	glm::vec3 negXYn = glm::vec3(0, 0, -1);
+	glm::vec3 negXZn = glm::vec3(0, -1, 0);
+
+	glm::vec3 aux = glm::vec3(-5, 0, -5);
+	glm::vec3 aux2 = glm::vec3(-5, 0, 5);
+	glm::vec3 aux3 = glm::vec3(5, 0, -5);
+	glm::vec3 aux4 = glm::vec3(-5, 10, -5);
+	glm::vec3 vX1 = aux - aux2;
+	glm::vec3 vX2 = aux - aux3;
+
+
+	//esfera
+	//glm::vec3 auxEsf;
+
+	float planeD(glm::vec3 normal, glm::vec3 point) {
+		return -(normal.x*point.x + normal.y*point.y + normal.z*point.z);
+	}
+
+}
+
+
 
 void MyPhysicsInit() {
 	//myPS.position = new glm::vec3[14*18];
@@ -619,6 +657,65 @@ void MyPhysicsUpdate(float dt) {
 			if (!((i == 0 && j == 0) || (i == 0 && j == 13))) {
 				myPM.points[i][j].newPosition = myPM.points[i][j].actualPosition + (myPM.points[i][j].actualPosition - myPM.points[i][j].lastPosition) + (myPM.points[i][j].totalForce / myPM.points[i][j].mass)*glm::pow(dt*myPM.dtReductor, 2);
 
+
+				//Colisions
+
+				//plano tierra                                     positionI                                                                                                        positionF
+				if (((glm::dot(extraData::XZn, myPM.points[i][j].actualPosition) + extraData::planeD(extraData::XZn, extraData::aux))*(glm::dot(extraData::XZn, myPM.points[i][j].newPosition) + extraData::planeD(extraData::XZn, extraData::aux))) <= 0) {
+
+					myPM.points[i][j].newPosition = myPM.points[i][j].newPosition - 2 * (glm::dot(extraData::XZn, myPM.points[i][j].newPosition) + extraData::planeD(extraData::XZn, extraData::aux))*extraData::XZn;
+
+				}
+
+				//plano derecha
+				if (((glm::dot(extraData::negYZn, myPM.points[i][j].actualPosition) + extraData::planeD(extraData::negYZn, extraData::aux3))*(glm::dot(extraData::negYZn, myPM.points[i][j].newPosition) + extraData::planeD(extraData::negYZn, extraData::aux3))) <= 0) {
+					myPM.points[i][j].newPosition = myPM.points[i][j].newPosition - 2 * (glm::dot(extraData::negYZn, myPM.points[i][j].newPosition) + extraData::planeD(extraData::negYZn, extraData::aux3))*extraData::negYZn;
+
+				}
+
+				//plano delante
+				if (((glm::dot(extraData::negXYn, myPM.points[i][j].actualPosition) + extraData::planeD(extraData::negXYn, extraData::aux3))*(glm::dot(extraData::negXYn, myPM.points[i][j].newPosition) + extraData::planeD(extraData::negXYn, extraData::aux3))) <= 0) {
+					myPM.points[i][j].newPosition = myPM.points[i][j].newPosition - 2 * (glm::dot(extraData::negXYn, myPM.points[i][j].newPosition) + extraData::planeD(extraData::negXYn, extraData::aux3))*extraData::negXYn;
+
+				}
+
+				//plano detras
+				if (((glm::dot(extraData::XYn, myPM.points[i][j].actualPosition) + extraData::planeD(extraData::XYn, extraData::aux2))*(glm::dot(extraData::XYn, myPM.points[i][j].newPosition) + extraData::planeD(extraData::XYn, extraData::aux2))) <= 0) {
+					myPM.points[i][j].newPosition = myPM.points[i][j].newPosition - 2 * (glm::dot(extraData::XYn, myPM.points[i][j].newPosition) + extraData::planeD(extraData::XYn, extraData::aux2))*extraData::XYn;
+
+				}
+
+				//plano izquierda
+				if (((glm::dot(extraData::YZn, myPM.points[i][j].actualPosition) + extraData::planeD(extraData::YZn, extraData::aux2))*(glm::dot(extraData::YZn, myPM.points[i][j].newPosition) + extraData::planeD(extraData::YZn, extraData::aux2))) <= 0) {
+					myPM.points[i][j].newPosition = myPM.points[i][j].newPosition - 2 * (glm::dot(extraData::YZn, myPM.points[i][j].newPosition) + extraData::planeD(extraData::YZn, extraData::aux2))*extraData::YZn;
+
+				}
+
+				//plano arriba
+				if (((glm::dot(extraData::negXZn, myPM.points[i][j].actualPosition) + extraData::planeD(extraData::negXZn, extraData::aux4))*(glm::dot(extraData::negXZn, myPM.points[i][j].newPosition) + extraData::planeD(extraData::negXZn, extraData::aux4))) <= 0) {
+					myPM.points[i][j].newPosition = myPM.points[i][j].newPosition - 2 * (glm::dot(extraData::negXZn, myPM.points[i][j].newPosition) + extraData::planeD(extraData::negXZn, extraData::aux4))*extraData::negXZn;
+
+				}
+
+				//renderSphere = true;
+				//Colisiones esfera
+				if (renderSphere) {
+					Sphere::updateSphere(Sphere::c, Sphere::r);
+					glm::vec3 nPlane = (myPM.points[i][j].actualPosition - Sphere::c);
+
+					if (glm::sqrt(glm::pow(nPlane.x, 2) + glm::pow(nPlane.y, 2) + glm::pow(nPlane.z, 2)) <= Sphere::r) {
+						glm::vec3 punto;
+						glm::vec3 normal;
+						glm::intersectLineSphere(myPM.points[i][j].newPosition, myPM.points[i][j].actualPosition, Sphere::c, Sphere::r, punto, normal);
+						float D = -(normal.x*punto.x + normal.y*punto.y + normal.z*punto.z);
+
+						myPM.points[i][j].newPosition = myPM.points[i][j].newPosition - extraData::indiceRebote * (glm::dot(normal, myPM.points[i][j].newPosition) + D)*normal;
+
+					}
+
+				}
+
+				//Actualitzar posició
 				myPM.points[i][j].lastPosition = myPM.points[i][j].actualPosition;
 
 				myPM.points[i][j].velocity = (myPM.points[i][j].newPosition - myPM.points[i][j].actualPosition) / dt*myPM.dtReductor;
