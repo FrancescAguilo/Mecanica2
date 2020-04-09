@@ -181,7 +181,7 @@ void MyPhysicsUpdate(float dt) {
 		for (int j = 0; j < 14; j++) {
 
 			myPM.points[i][j].newPosition = myPM.points[i][j].actualPosition + (myPM.points[i][j].actualPosition - myPM.points[i][j].lastPosition) + (myPM.points[i][j].totalForce / myPM.points[i][j].mass)*glm::pow(dt, 2);
-			//std::cout << "ANTES DE COLISION" << myPM.points[i][j].newPosition.x << "," << myPM.points[i][j].newPosition.y << "," << myPM.points[i][j].newPosition.z << std::endl;
+			
 			
 
 
@@ -189,12 +189,8 @@ void MyPhysicsUpdate(float dt) {
 
 			//plano tierra                                     positionI                                                                                                        positionF
 			if (((glm::dot(extraData::XZn, myPM.points[i][j].lastPosition) + extraData::planeD(extraData::XZn, extraData::aux))*(glm::dot(extraData::XZn, myPM.points[i][j].actualPosition) + extraData::planeD(extraData::XZn, extraData::aux))) <= 0) {
-				//std::cout << "COLISION" << std::endl;
-				//std::cout << "ANTES:" << myPM.points[i][j].newPosition.x << "," << myPM.points[i][j].newPosition.y << "," << myPM.points[i][j].newPosition.z << std::endl;
 
 				myPM.points[i][j].newPosition = myPM.points[i][j].actualPosition - 2 * (glm::dot(extraData::XZn , myPM.points[i][j].actualPosition) + extraData::planeD(extraData::XZn, extraData::aux))*extraData::XZn;
-				
-				//std::cout << "DESPUES DE COLISION:" << myPM.points[i][j].newPosition.x << "," << myPM.points[i][j].newPosition.y << "," << myPM.points[i][j].newPosition.z << "\n" <<std::endl;
 				
 			}
 
@@ -202,7 +198,7 @@ void MyPhysicsUpdate(float dt) {
 			//Colisiones esfera
 			if (renderSphere) {
 				Sphere::updateSphere(Sphere::c, Sphere::r);
-				glm::vec3 nPlane = (myPM.points[i][j].lastPosition - Sphere::c);
+				glm::vec3 nPlane = (myPM.points[i][j].lastPosition - Sphere::c);//REHACER ESTO
 
 				if (glm::sqrt(glm::pow(nPlane.x, 2) + glm::pow(nPlane.y, 2) + glm::pow(nPlane.z, 2)) <= Sphere::r) {
 					glm::vec3 punto;
