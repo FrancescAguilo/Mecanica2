@@ -12,18 +12,7 @@ extern void Exemple_PhysicsCleanup();
 extern bool renderSphere;
 
 bool show_test_window = false;
-void GUI() {
-	bool show = true;
-	ImGui::Begin("Physics Parameters", &show, 0);
 
-	{
-		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);//FrameRate
-		//Exemple_GUI();
-		ImGui::Checkbox("Esfera", &renderSphere);
-	}
-
-	ImGui::End();
-}
 namespace Sphere {
 	glm::vec3 c = glm::vec3(0, 1, 0); //centro esfera
 	float r = 1; //radio esfera 
@@ -95,7 +84,7 @@ void updateMyPMPointsPositions() {
 
 glm::vec3 getSpringForce(MeshPoint P1, MeshPoint P2 , float L12) {
 
-	glm::vec3 auxVec3 =  (P1.actualPosition-P2.actualPosition) / glm::length<float>(P1.actualPosition - P2.actualPosition);
+	glm::vec3 auxVec3 = (P1.actualPosition - P2.actualPosition) / glm::length<float>(P1.actualPosition - P2.actualPosition);
 	float firstComponent = myPM.kEslatic * (glm::length<float>(P1.actualPosition - P2.actualPosition) - L12);
 	float secondComponent = myPM.kDump * (glm::dot<float>(auxVec3,P1.velocity-P2.velocity));
 	
@@ -103,7 +92,7 @@ glm::vec3 getSpringForce(MeshPoint P1, MeshPoint P2 , float L12) {
 }
 ////////////////////
 
-namespace extraData {
+namespace myData {
 	float indiceRebote = 2;
 
 	//planos
@@ -649,39 +638,39 @@ void MyPhysicsUpdate(float dt) {
 				//Colisions
 
 				//plano tierra                                                                                                                                       
-				if (((glm::dot(extraData::XZn, myPM.points[i][j].actualPosition) + extraData::planeD(extraData::XZn, extraData::aux))*(glm::dot(extraData::XZn, myPM.points[i][j].newPosition) + extraData::planeD(extraData::XZn, extraData::aux))) <= 0) {
+				if (((glm::dot(myData::XZn, myPM.points[i][j].actualPosition) + myData::planeD(myData::XZn, myData::aux))*(glm::dot(myData::XZn, myPM.points[i][j].newPosition) + myData::planeD(myData::XZn, myData::aux))) <= 0) {
 
-					myPM.points[i][j].newPosition = myPM.points[i][j].newPosition - (1 + myPM.E) * (glm::dot(extraData::XZn, myPM.points[i][j].newPosition) + extraData::planeD(extraData::XZn, extraData::aux))*extraData::XZn;
+					myPM.points[i][j].newPosition = myPM.points[i][j].newPosition - (1 + myPM.E) * (glm::dot(myData::XZn, myPM.points[i][j].newPosition) + myData::planeD(myData::XZn, myData::aux))*myData::XZn;
 
 				}
 
 				//plano derecha
-				if (((glm::dot(extraData::negYZn, myPM.points[i][j].actualPosition) + extraData::planeD(extraData::negYZn, extraData::aux3))*(glm::dot(extraData::negYZn, myPM.points[i][j].newPosition) + extraData::planeD(extraData::negYZn, extraData::aux3))) <= 0) {
-					myPM.points[i][j].newPosition = myPM.points[i][j].newPosition - (1 + myPM.E) * (glm::dot(extraData::negYZn, myPM.points[i][j].newPosition) + extraData::planeD(extraData::negYZn, extraData::aux3))*extraData::negYZn;
+				if (((glm::dot(myData::negYZn, myPM.points[i][j].actualPosition) + myData::planeD(myData::negYZn, myData::aux3))*(glm::dot(myData::negYZn, myPM.points[i][j].newPosition) + myData::planeD(myData::negYZn, myData::aux3))) <= 0) {
+					myPM.points[i][j].newPosition = myPM.points[i][j].newPosition - (1 + myPM.E) * (glm::dot(myData::negYZn, myPM.points[i][j].newPosition) + myData::planeD(myData::negYZn, myData::aux3))*myData::negYZn;
 
 				}
 
 				//plano delante
-				if (((glm::dot(extraData::negXYn, myPM.points[i][j].actualPosition) + extraData::planeD(extraData::negXYn, extraData::aux3))*(glm::dot(extraData::negXYn, myPM.points[i][j].newPosition) + extraData::planeD(extraData::negXYn, extraData::aux3))) <= 0) {
-					myPM.points[i][j].newPosition = myPM.points[i][j].newPosition - (1 + myPM.E) * (glm::dot(extraData::negXYn, myPM.points[i][j].newPosition) + extraData::planeD(extraData::negXYn, extraData::aux3))*extraData::negXYn;
+				if (((glm::dot(myData::negXYn, myPM.points[i][j].actualPosition) + myData::planeD(myData::negXYn, myData::aux3))*(glm::dot(myData::negXYn, myPM.points[i][j].newPosition) + myData::planeD(myData::negXYn, myData::aux3))) <= 0) {
+					myPM.points[i][j].newPosition = myPM.points[i][j].newPosition - (1 + myPM.E) * (glm::dot(myData::negXYn, myPM.points[i][j].newPosition) + myData::planeD(myData::negXYn, myData::aux3))*myData::negXYn;
 
 				}
 
 				//plano detras
-				if (((glm::dot(extraData::XYn, myPM.points[i][j].actualPosition) + extraData::planeD(extraData::XYn, extraData::aux2))*(glm::dot(extraData::XYn, myPM.points[i][j].newPosition) + extraData::planeD(extraData::XYn, extraData::aux2))) <= 0) {
-					myPM.points[i][j].newPosition = myPM.points[i][j].newPosition - (1 + myPM.E) * (glm::dot(extraData::XYn, myPM.points[i][j].newPosition) + extraData::planeD(extraData::XYn, extraData::aux2))*extraData::XYn;
+				if (((glm::dot(myData::XYn, myPM.points[i][j].actualPosition) + myData::planeD(myData::XYn, myData::aux2))*(glm::dot(myData::XYn, myPM.points[i][j].newPosition) + myData::planeD(myData::XYn, myData::aux2))) <= 0) {
+					myPM.points[i][j].newPosition = myPM.points[i][j].newPosition - (1 + myPM.E) * (glm::dot(myData::XYn, myPM.points[i][j].newPosition) + myData::planeD(myData::XYn, myData::aux2))*myData::XYn;
 
 				}
 
 				//plano izquierda
-				if (((glm::dot(extraData::YZn, myPM.points[i][j].actualPosition) + extraData::planeD(extraData::YZn, extraData::aux2))*(glm::dot(extraData::YZn, myPM.points[i][j].newPosition) + extraData::planeD(extraData::YZn, extraData::aux2))) <= 0) {
-					myPM.points[i][j].newPosition = myPM.points[i][j].newPosition - (1 + myPM.E) * (glm::dot(extraData::YZn, myPM.points[i][j].newPosition) + extraData::planeD(extraData::YZn, extraData::aux2))*extraData::YZn;
+				if (((glm::dot(myData::YZn, myPM.points[i][j].actualPosition) + myData::planeD(myData::YZn, myData::aux2))*(glm::dot(myData::YZn, myPM.points[i][j].newPosition) + myData::planeD(myData::YZn, myData::aux2))) <= 0) {
+					myPM.points[i][j].newPosition = myPM.points[i][j].newPosition - (1 + myPM.E) * (glm::dot(myData::YZn, myPM.points[i][j].newPosition) + myData::planeD(myData::YZn, myData::aux2))*myData::YZn;
 
 				}
 
 				//plano arriba
-				if (((glm::dot(extraData::negXZn, myPM.points[i][j].actualPosition) + extraData::planeD(extraData::negXZn, extraData::aux4))*(glm::dot(extraData::negXZn, myPM.points[i][j].newPosition) + extraData::planeD(extraData::negXZn, extraData::aux4))) <= 0) {
-					myPM.points[i][j].newPosition = myPM.points[i][j].newPosition - (1 + myPM.E) * (glm::dot(extraData::negXZn, myPM.points[i][j].newPosition) + extraData::planeD(extraData::negXZn, extraData::aux4))*extraData::negXZn;
+				if (((glm::dot(myData::negXZn, myPM.points[i][j].actualPosition) + myData::planeD(myData::negXZn, myData::aux4))*(glm::dot(myData::negXZn, myPM.points[i][j].newPosition) + myData::planeD(myData::negXZn, myData::aux4))) <= 0) {
+					myPM.points[i][j].newPosition = myPM.points[i][j].newPosition - (1 + myPM.E) * (glm::dot(myData::negXZn, myPM.points[i][j].newPosition) + myData::planeD(myData::negXZn, myData::aux4))*myData::negXZn;
 
 				}
 
@@ -744,6 +733,21 @@ void MyPhysicsCleanup() {
 
 }
 
+void GUI() {
+	bool show = true;
+	ImGui::Begin("Physics Parameters", &show, 0);
+	ImGui::SetWindowSize(ImVec2(400, 300));
+	{
+		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);//FrameRate
+		//Exemple_GUI();
+		ImGui::Checkbox("Esfera", &renderSphere);
+		ImGui::DragFloat("Fuerza rebote", &myPM.E, 0.01f);
+		ImGui::DragFloat("Gravedad", &myPM.gravity, 0.01f);
+		ImGui::DragFloat("Reductor dt", &myPM.dtReductor, 0.01f);
+	}
+
+	ImGui::End();
+}
 
 /////////////////////////////////
 
