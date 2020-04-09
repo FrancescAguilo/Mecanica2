@@ -74,12 +74,14 @@ namespace {
 	static struct ParticleMesh {
 		MeshPoint **points;
 		glm::vec3 *pointsPositions;
-		float kEslatic = 500;
-		float kDump = 1;
+		float kEslatic = 200;
+		float kDump = 200;
 		float gravity = -9.81;
 		float structuralSpringLength = 0.5f;
 		float shearSpringLength = glm::sqrt(glm::pow(structuralSpringLength,2)*2);
 		float bendingSpringLength = structuralSpringLength * 2;
+		float dtReductor = 0.1f;
+
 	} myPM;
 }
 void updateMyPMPointsPositions() {
@@ -248,6 +250,7 @@ void MyPhysicsInit() {
 }
 
 void MyPhysicsUpdate(float dt) {
+
 	//forçes
 	for (int i = 0; i < 18; i++) {
 		for (int j = 0; j < 14; j++) {
@@ -627,7 +630,7 @@ void MyPhysicsUpdate(float dt) {
 
 				}
 				
-				myPM.points[i][j].totalForce = myPM.points[i][j].structuralForce + myPM.points[i][j].shearForce + myPM.points[i][j].bendingForce + glm::vec3(0, -myPM.gravity, 0);
+				myPM.points[i][j].totalForce = myPM.points[i][j].structuralForce + myPM.points[i][j].shearForce + myPM.points[i][j].bendingForce + glm::vec3(0, myPM.gravity, 0);
 			}
 		}
 	}
@@ -638,17 +641,17 @@ void MyPhysicsUpdate(float dt) {
 		for (int j = 0; j < 14; j++) {
 
 			if (!((i == 0 && j == 0) || (i == 0 && j == 13)) && !myPM.points[i][j].stopViaSolution) {
-				myPM.points[i][j].newPosition = myPM.points[i][j].actualPosition + (myPM.points[i][j].actualPosition - myPM.points[i][j].lastPosition) + (myPM.points[i][j].totalForce / myPM.points[i][j].mass)*glm::pow(dt, 2);
+				myPM.points[i][j].newPosition = myPM.points[i][j].actualPosition + (myPM.points[i][j].actualPosition - myPM.points[i][j].lastPosition) + (myPM.points[i][j].totalForce / myPM.points[i][j].mass)*glm::pow(dt*myPM.dtReductor, 2);
 
 				myPM.points[i][j].lastPosition = myPM.points[i][j].actualPosition;
 
-				myPM.points[i][j].velocity = (myPM.points[i][j].newPosition - myPM.points[i][j].actualPosition) / dt;
+				myPM.points[i][j].velocity = (myPM.points[i][j].newPosition - myPM.points[i][j].actualPosition) / dt*myPM.dtReductor;
 
 				myPM.points[i][j].actualPosition = myPM.points[i][j].newPosition;
 			}
 		}
 	}
-
+	//std::cout << dt << std::endl;
 
 	updateMyPMPointsPositions();
 	ClothMesh::updateClothMesh(&(myPM.pointsPositions[0].x));
