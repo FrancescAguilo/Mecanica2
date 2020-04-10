@@ -46,6 +46,7 @@ namespace {
 		glm::vec3 bendingForce; //contaria?
 		float mass = 1;
 		
+
 		glm::vec3 velocity;
 	
 
@@ -64,7 +65,7 @@ namespace {
 		MeshPoint **points;
 		glm::vec3 *pointsPositions;
 		float kEslatic = 400;
-		float kDump = 200;
+		float kDump = 300;
 		float gravity = -9.81;
 		float structuralSpringLength = 0.5f;
 		float shearSpringLength = glm::sqrt(glm::pow(structuralSpringLength,2)*2);
@@ -73,6 +74,7 @@ namespace {
 		float E = 0.05f;
 		float automaticTimeReset = 20;
 		float timeCount;
+		
 
 	} myPM;
 }
@@ -768,14 +770,19 @@ void GUI() {
 		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);//FrameRate
 		//Exemple_GUI();
 		ImGui::Checkbox("Esfera", &renderSphere);
-		ImGui::SliderFloat("Fuerza rebote", &myPM.E, 0.f,1.f);
-		ImGui::DragFloat("Gravedad", &myPM.gravity, 0.01f);
-		ImGui::DragFloat("Reductor dt", &myPM.dtReductor, 0.01f);
-		ImGui::SliderFloat("Tiempo de reseteo automatico", &myPM.automaticTimeReset, 10.f, 30.f);
 		if (ImGui::Button("Reseteo manual"))
 		{
 			resetMyPM();
 		}
+		ImGui::SliderFloat("Fuerza rebote", &myPM.E, 0.f,1.f);
+		ImGui::DragFloat("Gravedad", &myPM.gravity, 0.01f);
+		ImGui::DragFloat("Reductor dt", &myPM.dtReductor, 0.01f);
+		ImGui::SliderFloat("Tiempo de reseteo automatico", &myPM.automaticTimeReset, 10.f, 30.f);
+		ImGui::Text("Estadisticas esfera:");
+		ImGui::DragFloat("Radio esfera", &Sphere::r, 0.01f);
+		ImGui::DragFloat("X esfera", &Sphere::c.x, 0.01f);
+		ImGui::DragFloat("Y esfera", &Sphere::c.y, 0.01f);
+		ImGui::DragFloat("Z esfera", &Sphere::c.z, 0.01f);
 	}
 
 	ImGui::End();
