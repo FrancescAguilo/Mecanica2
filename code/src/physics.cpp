@@ -71,9 +71,26 @@ namespace {
 		float bendingSpringLength = structuralSpringLength * 2;
 		float dtReductor = 0.1f;
 		float E = 0.05f;
+		float automaticTimeReset = 20;
+		float timeCount;
 
 	} myPM;
 }
+void resetMyPM() {
+	for (int i = 0; i < 18; i++) {
+		for (int j = 0; j < 14; j++) {
+			myPM.points[i][j].actualPosition.x = i * 0.5f - 17 * 0.5f * 0.5f; //posicio inicial = horitzontal i elevat
+			myPM.points[i][j].actualPosition.y = 9;
+			myPM.points[i][j].actualPosition.z = j * 0.5f - 13 * 0.5f * 0.5f;
+			myPM.points[i][j].lastPosition = myPM.points[i][j].actualPosition;
+			myPM.points[i][j].velocity = glm::vec3(0, 0, 0); //velocitat inicial = 0
+		}
+	}
+	myPM.timeCount = 0;
+	Sphere::c = glm::vec3((rand() % 11) - 5, (rand() % 5) + 1 , (rand() % 11) - 5);
+	Sphere::r = rand() % 2 + 1;
+}
+
 void updateMyPMPointsPositions() {
 	for (int i = 0; i < 18; i++) {
 		for (int j = 0; j < 14; j++) {
@@ -122,6 +139,8 @@ void MyPhysicsInit() {
 
 	ClothMesh::setupClothMesh();
 
+	myPM.timeCount = 0;
+	renderSphere = true;
 	myPM.points = new MeshPoint*[18];
 	for (int i = 0; i < 18; i++) {
 		myPM.points[i] = new MeshPoint[14];
@@ -138,6 +157,7 @@ void MyPhysicsInit() {
 
 			myPM.points[i][j].velocity = glm::vec3(0,0,0); //velocitat inicial = 0
 			myPM.points[i][j].type = 0;
+
 
 			//types i pointers
 			//pointers laterals
@@ -264,6 +284,13 @@ void MyPhysicsInit() {
 }
 
 void MyPhysicsUpdate(float dt) {
+
+	if (myPM.timeCount >= myPM.automaticTimeReset) {
+		resetMyPM();
+	}
+	else {
+		myPM.timeCount += dt;
+	}
 
 	//forçes
 	for (int i = 0; i < 18; i++) {
@@ -741,9 +768,14 @@ void GUI() {
 		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);//FrameRate
 		//Exemple_GUI();
 		ImGui::Checkbox("Esfera", &renderSphere);
-		ImGui::DragFloat("Fuerza rebote", &myPM.E, 0.01f);
+		ImGui::SliderFloat("Fuerza rebote", &myPM.E, 0.f,1.f);
 		ImGui::DragFloat("Gravedad", &myPM.gravity, 0.01f);
 		ImGui::DragFloat("Reductor dt", &myPM.dtReductor, 0.01f);
+		ImGui::SliderFloat("Tiempo de reseteo automatico", &myPM.automaticTimeReset, 10.f, 30.f);
+		if (ImGui::Button("Reseteo manual"))
+		{
+			resetMyPM();
+		}
 	}
 
 	ImGui::End();
