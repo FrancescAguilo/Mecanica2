@@ -75,15 +75,21 @@ namespace {
 		float automaticTimeReset = 20;
 		float timeCount;
 		
+		float kEslatic_struc = 400;
+		float kDump_struc = 300;
+		float kEslatic_shear = 400;
+		float kDump_shear = 300;
+		float kEslatic_bend = 400;
+		float kDump_bend = 300;
 
 	} myPM;
 }
 void resetMyPM() {
 	for (int i = 0; i < 18; i++) {
 		for (int j = 0; j < 14; j++) {
-			myPM.points[i][j].actualPosition.x = i * 0.5f - 17 * 0.5f * 0.5f; //posicio inicial = horitzontal i elevat
+			myPM.points[i][j].actualPosition.x = i * myPM.structuralSpringLength - 17 * myPM.structuralSpringLength * 0.5f; //posicio inicial = horitzontal i elevat
 			myPM.points[i][j].actualPosition.y = 9;
-			myPM.points[i][j].actualPosition.z = j * 0.5f - 13 * 0.5f * 0.5f;
+			myPM.points[i][j].actualPosition.z = j * myPM.structuralSpringLength - 13 * myPM.structuralSpringLength * 0.5f;
 			myPM.points[i][j].lastPosition = myPM.points[i][j].actualPosition;
 			myPM.points[i][j].velocity = glm::vec3(0, 0, 0); //velocitat inicial = 0
 		}
@@ -91,6 +97,9 @@ void resetMyPM() {
 	myPM.timeCount = 0;
 	Sphere::c = glm::vec3((rand() % 11) - 5, (rand() % 5) + 1 , (rand() % 11) - 5);
 	Sphere::r = rand() % 2 + 1;
+
+	myPM.shearSpringLength = glm::sqrt(glm::pow(myPM.structuralSpringLength, 2) * 2);
+	myPM.bendingSpringLength = myPM.structuralSpringLength * 2;
 }
 
 void updateMyPMPointsPositions() {
@@ -101,11 +110,11 @@ void updateMyPMPointsPositions() {
 	}
 }
 
-glm::vec3 getSpringForce(MeshPoint P1, MeshPoint P2 , float L12) {
+glm::vec3 getSpringForce(MeshPoint P1, MeshPoint P2 , float L12, float Ke, float Kd) {
 
 	glm::vec3 auxVec3 = (P1.actualPosition - P2.actualPosition) / glm::length<float>(P1.actualPosition - P2.actualPosition);
-	float firstComponent = myPM.kEslatic * (glm::length<float>(P1.actualPosition - P2.actualPosition) - L12);
-	float secondComponent = myPM.kDump * (glm::dot<float>(auxVec3,P1.velocity-P2.velocity));
+	float firstComponent = Ke * (glm::length<float>(P1.actualPosition - P2.actualPosition) - L12);
+	float secondComponent = Kd * (glm::dot<float>(auxVec3,P1.velocity-P2.velocity));
 	
 	return -(firstComponent + secondComponent) * auxVec3;
 }
@@ -309,112 +318,112 @@ void MyPhysicsUpdate(float dt) {
 			switch (myPM.points[i][j].type) {
 				case 1:
 					//structural
-					myPM.points[i][j].structuralForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint, myPM.structuralSpringLength);
-					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint, myPM.structuralSpringLength);
+					myPM.points[i][j].structuralForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint, myPM.structuralSpringLength,myPM.kEslatic_struc,myPM.kDump_struc);
+					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint, myPM.structuralSpringLength,myPM.kEslatic_struc,myPM.kDump_struc);
 					//shear
-					myPM.points[i][j].shearForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint->rightPoint, myPM.shearSpringLength);
+					myPM.points[i][j].shearForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint->rightPoint, myPM.shearSpringLength,myPM.kEslatic_shear,myPM.kDump_shear);
 					//bending
-					myPM.points[i][j].bendingForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint->downPoint, myPM.bendingSpringLength);
-					myPM.points[i][j].bendingForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint->rightPoint, myPM.bendingSpringLength);
+					myPM.points[i][j].bendingForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint->downPoint, myPM.bendingSpringLength,myPM.kEslatic_bend,myPM.kDump_bend);
+					myPM.points[i][j].bendingForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint->rightPoint, myPM.bendingSpringLength,myPM.kEslatic_bend,myPM.kDump_bend);
 					break;
 				case 2:
 					//structural
-					myPM.points[i][j].structuralForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint, myPM.structuralSpringLength);
-					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].upPoint, myPM.structuralSpringLength);
+					myPM.points[i][j].structuralForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint, myPM.structuralSpringLength,myPM.kEslatic_struc,myPM.kDump_struc);
+					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].upPoint, myPM.structuralSpringLength,myPM.kEslatic_struc,myPM.kDump_struc);
 					//shear
-					myPM.points[i][j].shearForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].upPoint->rightPoint, myPM.shearSpringLength);
+					myPM.points[i][j].shearForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].upPoint->rightPoint, myPM.shearSpringLength,myPM.kEslatic_shear,myPM.kDump_shear);
 					//bending
-					myPM.points[i][j].bendingForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].upPoint->upPoint, myPM.bendingSpringLength);
-					myPM.points[i][j].bendingForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint->rightPoint, myPM.bendingSpringLength);
+					myPM.points[i][j].bendingForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].upPoint->upPoint, myPM.bendingSpringLength,myPM.kEslatic_bend,myPM.kDump_bend);
+					myPM.points[i][j].bendingForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint->rightPoint, myPM.bendingSpringLength,myPM.kEslatic_bend,myPM.kDump_bend);
 					break;
 				case 3:
 					//structural
-					myPM.points[i][j].structuralForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint, myPM.structuralSpringLength);
-					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].upPoint, myPM.structuralSpringLength);
-					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint, myPM.structuralSpringLength);
+					myPM.points[i][j].structuralForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint, myPM.structuralSpringLength,myPM.kEslatic_struc,myPM.kDump_struc);
+					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].upPoint, myPM.structuralSpringLength,myPM.kEslatic_struc,myPM.kDump_struc);
+					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint, myPM.structuralSpringLength,myPM.kEslatic_struc,myPM.kDump_struc);
 					//shear
-					myPM.points[i][j].shearForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].upPoint->rightPoint, myPM.shearSpringLength);
-					myPM.points[i][j].shearForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint->rightPoint, myPM.shearSpringLength);
+					myPM.points[i][j].shearForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].upPoint->rightPoint, myPM.shearSpringLength,myPM.kEslatic_shear,myPM.kDump_shear);
+					myPM.points[i][j].shearForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint->rightPoint, myPM.shearSpringLength,myPM.kEslatic_shear,myPM.kDump_shear);
 					//bending
-					myPM.points[i][j].bendingForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint->downPoint, myPM.bendingSpringLength);
-					myPM.points[i][j].bendingForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].upPoint->upPoint, myPM.bendingSpringLength);
-					myPM.points[i][j].bendingForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint->rightPoint, myPM.bendingSpringLength);
+					myPM.points[i][j].bendingForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint->downPoint, myPM.bendingSpringLength,myPM.kEslatic_bend,myPM.kDump_bend);
+					myPM.points[i][j].bendingForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].upPoint->upPoint, myPM.bendingSpringLength,myPM.kEslatic_bend,myPM.kDump_bend);
+					myPM.points[i][j].bendingForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint->rightPoint, myPM.bendingSpringLength,myPM.kEslatic_bend,myPM.kDump_bend);
 					break;
 				case 4:
 					//structural
-					myPM.points[i][j].structuralForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint, myPM.structuralSpringLength);
-					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint, myPM.structuralSpringLength);
+					myPM.points[i][j].structuralForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint, myPM.structuralSpringLength,myPM.kEslatic_struc,myPM.kDump_struc);
+					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint, myPM.structuralSpringLength,myPM.kEslatic_struc,myPM.kDump_struc);
 					//shear
-					myPM.points[i][j].shearForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint->leftPoint, myPM.shearSpringLength);
+					myPM.points[i][j].shearForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint->leftPoint, myPM.shearSpringLength,myPM.kEslatic_shear,myPM.kDump_shear);
 					//bending
-					myPM.points[i][j].bendingForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint->downPoint, myPM.bendingSpringLength);
-					myPM.points[i][j].bendingForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint->leftPoint, myPM.bendingSpringLength);
+					myPM.points[i][j].bendingForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint->downPoint, myPM.bendingSpringLength,myPM.kEslatic_bend,myPM.kDump_bend);
+					myPM.points[i][j].bendingForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint->leftPoint, myPM.bendingSpringLength,myPM.kEslatic_bend,myPM.kDump_bend);
 					break;
 				case 5:
 					//structural
-					myPM.points[i][j].structuralForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint, myPM.structuralSpringLength);
-					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].upPoint, myPM.structuralSpringLength);
+					myPM.points[i][j].structuralForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint, myPM.structuralSpringLength,myPM.kEslatic_struc,myPM.kDump_struc);
+					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].upPoint, myPM.structuralSpringLength,myPM.kEslatic_struc,myPM.kDump_struc);
 					//shear
-					myPM.points[i][j].shearForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].upPoint->leftPoint, myPM.shearSpringLength);
+					myPM.points[i][j].shearForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].upPoint->leftPoint, myPM.shearSpringLength,myPM.kEslatic_shear,myPM.kDump_shear);
 					//bending
-					myPM.points[i][j].bendingForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].upPoint->upPoint, myPM.bendingSpringLength);
-					myPM.points[i][j].bendingForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint->leftPoint, myPM.bendingSpringLength);
+					myPM.points[i][j].bendingForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].upPoint->upPoint, myPM.bendingSpringLength,myPM.kEslatic_bend,myPM.kDump_bend);
+					myPM.points[i][j].bendingForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint->leftPoint, myPM.bendingSpringLength,myPM.kEslatic_bend,myPM.kDump_bend);
 					break;
 				case 6:
 					//structural
-					myPM.points[i][j].structuralForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint, myPM.structuralSpringLength);
-					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].upPoint, myPM.structuralSpringLength);
-					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint, myPM.structuralSpringLength);
+					myPM.points[i][j].structuralForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint, myPM.structuralSpringLength,myPM.kEslatic_struc,myPM.kDump_struc);
+					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].upPoint, myPM.structuralSpringLength,myPM.kEslatic_struc,myPM.kDump_struc);
+					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint, myPM.structuralSpringLength,myPM.kEslatic_struc,myPM.kDump_struc);
 					//shear
-					myPM.points[i][j].shearForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].upPoint->leftPoint, myPM.shearSpringLength);
-					myPM.points[i][j].shearForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint->leftPoint, myPM.shearSpringLength);
+					myPM.points[i][j].shearForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].upPoint->leftPoint, myPM.shearSpringLength,myPM.kEslatic_shear,myPM.kDump_shear);
+					myPM.points[i][j].shearForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint->leftPoint, myPM.shearSpringLength,myPM.kEslatic_shear,myPM.kDump_shear);
 					//bending
-					myPM.points[i][j].bendingForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint->downPoint, myPM.bendingSpringLength);
-					myPM.points[i][j].bendingForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].upPoint->upPoint, myPM.bendingSpringLength);
-					myPM.points[i][j].bendingForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint->leftPoint, myPM.bendingSpringLength);
+					myPM.points[i][j].bendingForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint->downPoint, myPM.bendingSpringLength,myPM.kEslatic_bend,myPM.kDump_bend);
+					myPM.points[i][j].bendingForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].upPoint->upPoint, myPM.bendingSpringLength,myPM.kEslatic_bend,myPM.kDump_bend);
+					myPM.points[i][j].bendingForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint->leftPoint, myPM.bendingSpringLength,myPM.kEslatic_bend,myPM.kDump_bend);
 					break;
 				case 7:
 					//structural
-					myPM.points[i][j].structuralForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint, myPM.structuralSpringLength);
-					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint, myPM.structuralSpringLength);
-					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint, myPM.structuralSpringLength);
+					myPM.points[i][j].structuralForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint, myPM.structuralSpringLength,myPM.kEslatic_struc,myPM.kDump_struc);
+					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint, myPM.structuralSpringLength,myPM.kEslatic_struc,myPM.kDump_struc);
+					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint, myPM.structuralSpringLength,myPM.kEslatic_struc,myPM.kDump_struc);
 					//shear
-					myPM.points[i][j].shearForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint->downPoint, myPM.shearSpringLength);
-					myPM.points[i][j].shearForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint->downPoint, myPM.shearSpringLength);
+					myPM.points[i][j].shearForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint->downPoint, myPM.shearSpringLength,myPM.kEslatic_shear,myPM.kDump_shear);
+					myPM.points[i][j].shearForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint->downPoint, myPM.shearSpringLength,myPM.kEslatic_shear,myPM.kDump_shear);
 					//bending
-					myPM.points[i][j].bendingForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint->downPoint, myPM.bendingSpringLength);
-					myPM.points[i][j].bendingForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint->rightPoint, myPM.bendingSpringLength);
-					myPM.points[i][j].bendingForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint->leftPoint, myPM.bendingSpringLength);
+					myPM.points[i][j].bendingForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint->downPoint, myPM.bendingSpringLength,myPM.kEslatic_bend,myPM.kDump_bend);
+					myPM.points[i][j].bendingForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint->rightPoint, myPM.bendingSpringLength,myPM.kEslatic_bend,myPM.kDump_bend);
+					myPM.points[i][j].bendingForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint->leftPoint, myPM.bendingSpringLength,myPM.kEslatic_bend,myPM.kDump_bend);
 					break;
 				case 8:
 					//structural
-					myPM.points[i][j].structuralForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint, myPM.structuralSpringLength);
-					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint, myPM.structuralSpringLength);
-					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].upPoint, myPM.structuralSpringLength);
+					myPM.points[i][j].structuralForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint, myPM.structuralSpringLength,myPM.kEslatic_struc,myPM.kDump_struc);
+					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint, myPM.structuralSpringLength,myPM.kEslatic_struc,myPM.kDump_struc);
+					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].upPoint, myPM.structuralSpringLength,myPM.kEslatic_struc,myPM.kDump_struc);
 					//shear
-					myPM.points[i][j].shearForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint->upPoint, myPM.shearSpringLength);
-					myPM.points[i][j].shearForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint->upPoint, myPM.shearSpringLength);
+					myPM.points[i][j].shearForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint->upPoint, myPM.shearSpringLength,myPM.kEslatic_shear,myPM.kDump_shear);
+					myPM.points[i][j].shearForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint->upPoint, myPM.shearSpringLength,myPM.kEslatic_shear,myPM.kDump_shear);
 					//bending
-					myPM.points[i][j].bendingForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].upPoint->upPoint, myPM.bendingSpringLength);
-					myPM.points[i][j].bendingForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint->rightPoint, myPM.bendingSpringLength);
-					myPM.points[i][j].bendingForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint->leftPoint, myPM.bendingSpringLength);
+					myPM.points[i][j].bendingForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].upPoint->upPoint, myPM.bendingSpringLength,myPM.kEslatic_bend,myPM.kDump_bend);
+					myPM.points[i][j].bendingForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint->rightPoint, myPM.bendingSpringLength,myPM.kEslatic_bend,myPM.kDump_bend);
+					myPM.points[i][j].bendingForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint->leftPoint, myPM.bendingSpringLength,myPM.kEslatic_bend,myPM.kDump_bend);
 					break;
 				case 9:
 					//structural
-					myPM.points[i][j].structuralForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint, myPM.structuralSpringLength);
-					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint, myPM.structuralSpringLength);
-					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].upPoint, myPM.structuralSpringLength);
-					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint, myPM.structuralSpringLength);
+					myPM.points[i][j].structuralForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint, myPM.structuralSpringLength,myPM.kEslatic_struc,myPM.kDump_struc);
+					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint, myPM.structuralSpringLength,myPM.kEslatic_struc,myPM.kDump_struc);
+					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].upPoint, myPM.structuralSpringLength,myPM.kEslatic_struc,myPM.kDump_struc);
+					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint, myPM.structuralSpringLength,myPM.kEslatic_struc,myPM.kDump_struc);
 					//shear
-					myPM.points[i][j].shearForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint->upPoint, myPM.shearSpringLength);
-					myPM.points[i][j].shearForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint->downPoint, myPM.shearSpringLength);
-					myPM.points[i][j].shearForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint->downPoint, myPM.shearSpringLength);
-					myPM.points[i][j].shearForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint->upPoint, myPM.shearSpringLength);
+					myPM.points[i][j].shearForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint->upPoint, myPM.shearSpringLength,myPM.kEslatic_shear,myPM.kDump_shear);
+					myPM.points[i][j].shearForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint->downPoint, myPM.shearSpringLength,myPM.kEslatic_shear,myPM.kDump_shear);
+					myPM.points[i][j].shearForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint->downPoint, myPM.shearSpringLength,myPM.kEslatic_shear,myPM.kDump_shear);
+					myPM.points[i][j].shearForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint->upPoint, myPM.shearSpringLength,myPM.kEslatic_shear,myPM.kDump_shear);
 					//bending
-					myPM.points[i][j].bendingForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint->downPoint, myPM.bendingSpringLength);
-					myPM.points[i][j].bendingForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].upPoint->upPoint, myPM.bendingSpringLength);
-					myPM.points[i][j].bendingForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint->rightPoint, myPM.bendingSpringLength);
-					myPM.points[i][j].bendingForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint->leftPoint, myPM.bendingSpringLength);
+					myPM.points[i][j].bendingForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint->downPoint, myPM.bendingSpringLength,myPM.kEslatic_bend,myPM.kDump_bend);
+					myPM.points[i][j].bendingForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].upPoint->upPoint, myPM.bendingSpringLength,myPM.kEslatic_bend,myPM.kDump_bend);
+					myPM.points[i][j].bendingForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint->rightPoint, myPM.bendingSpringLength,myPM.kEslatic_bend,myPM.kDump_bend);
+					myPM.points[i][j].bendingForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint->leftPoint, myPM.bendingSpringLength,myPM.kEslatic_bend,myPM.kDump_bend);
 					break;
 
 
@@ -422,99 +431,99 @@ void MyPhysicsUpdate(float dt) {
 
 				case 10:
 					//structural
-					myPM.points[i][j].structuralForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint, myPM.structuralSpringLength);
-					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint, myPM.structuralSpringLength);
-					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint, myPM.structuralSpringLength);
+					myPM.points[i][j].structuralForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint, myPM.structuralSpringLength,myPM.kEslatic_struc,myPM.kDump_struc);
+					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint, myPM.structuralSpringLength,myPM.kEslatic_struc,myPM.kDump_struc);
+					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint, myPM.structuralSpringLength,myPM.kEslatic_struc,myPM.kDump_struc);
 					//shear
-					myPM.points[i][j].shearForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint->downPoint, myPM.shearSpringLength);
-					myPM.points[i][j].shearForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint->downPoint, myPM.shearSpringLength);
+					myPM.points[i][j].shearForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint->downPoint, myPM.shearSpringLength,myPM.kEslatic_shear,myPM.kDump_shear);
+					myPM.points[i][j].shearForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint->downPoint, myPM.shearSpringLength,myPM.kEslatic_shear,myPM.kDump_shear);
 					//bending
-					myPM.points[i][j].bendingForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint->downPoint, myPM.bendingSpringLength);
-					myPM.points[i][j].bendingForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint->rightPoint, myPM.bendingSpringLength);
+					myPM.points[i][j].bendingForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint->downPoint, myPM.bendingSpringLength,myPM.kEslatic_bend,myPM.kDump_bend);
+					myPM.points[i][j].bendingForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint->rightPoint, myPM.bendingSpringLength,myPM.kEslatic_bend,myPM.kDump_bend);
 					break;
 				case 11:
 					//structural
-					myPM.points[i][j].structuralForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint, myPM.structuralSpringLength);
-					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint, myPM.structuralSpringLength);
-					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint, myPM.structuralSpringLength);
+					myPM.points[i][j].structuralForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint, myPM.structuralSpringLength,myPM.kEslatic_struc,myPM.kDump_struc);
+					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint, myPM.structuralSpringLength,myPM.kEslatic_struc,myPM.kDump_struc);
+					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint, myPM.structuralSpringLength,myPM.kEslatic_struc,myPM.kDump_struc);
 					//shear
-					myPM.points[i][j].shearForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint->downPoint, myPM.shearSpringLength);
-					myPM.points[i][j].shearForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint->downPoint, myPM.shearSpringLength);
+					myPM.points[i][j].shearForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint->downPoint, myPM.shearSpringLength,myPM.kEslatic_shear,myPM.kDump_shear);
+					myPM.points[i][j].shearForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint->downPoint, myPM.shearSpringLength,myPM.kEslatic_shear,myPM.kDump_shear);
 					//bending
-					myPM.points[i][j].bendingForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint->downPoint, myPM.bendingSpringLength);
-					myPM.points[i][j].bendingForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint->leftPoint, myPM.bendingSpringLength);
+					myPM.points[i][j].bendingForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint->downPoint, myPM.bendingSpringLength,myPM.kEslatic_bend,myPM.kDump_bend);
+					myPM.points[i][j].bendingForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint->leftPoint, myPM.bendingSpringLength,myPM.kEslatic_bend,myPM.kDump_bend);
 					break;
 				case 12:
 					//structural
-					myPM.points[i][j].structuralForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint, myPM.structuralSpringLength);
-					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint, myPM.structuralSpringLength);
-					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].upPoint, myPM.structuralSpringLength);
+					myPM.points[i][j].structuralForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint, myPM.structuralSpringLength,myPM.kEslatic_struc,myPM.kDump_struc);
+					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint, myPM.structuralSpringLength,myPM.kEslatic_struc,myPM.kDump_struc);
+					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].upPoint, myPM.structuralSpringLength,myPM.kEslatic_struc,myPM.kDump_struc);
 					//shear
-					myPM.points[i][j].shearForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint->upPoint, myPM.shearSpringLength);
-					myPM.points[i][j].shearForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint->upPoint, myPM.shearSpringLength);
+					myPM.points[i][j].shearForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint->upPoint, myPM.shearSpringLength,myPM.kEslatic_shear,myPM.kDump_shear);
+					myPM.points[i][j].shearForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint->upPoint, myPM.shearSpringLength,myPM.kEslatic_shear,myPM.kDump_shear);
 					//bending
-					myPM.points[i][j].bendingForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].upPoint->upPoint, myPM.bendingSpringLength);
-					myPM.points[i][j].bendingForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint->rightPoint, myPM.bendingSpringLength);
+					myPM.points[i][j].bendingForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].upPoint->upPoint, myPM.bendingSpringLength,myPM.kEslatic_bend,myPM.kDump_bend);
+					myPM.points[i][j].bendingForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint->rightPoint, myPM.bendingSpringLength,myPM.kEslatic_bend,myPM.kDump_bend);
 					break;
 				case 13:
 					//structural
-					myPM.points[i][j].structuralForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint, myPM.structuralSpringLength);
-					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint, myPM.structuralSpringLength);
-					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].upPoint, myPM.structuralSpringLength);
+					myPM.points[i][j].structuralForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint, myPM.structuralSpringLength,myPM.kEslatic_struc,myPM.kDump_struc);
+					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint, myPM.structuralSpringLength,myPM.kEslatic_struc,myPM.kDump_struc);
+					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].upPoint, myPM.structuralSpringLength,myPM.kEslatic_struc,myPM.kDump_struc);
 					//shear
-					myPM.points[i][j].shearForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint->upPoint, myPM.shearSpringLength);
-					myPM.points[i][j].shearForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint->upPoint, myPM.shearSpringLength);
+					myPM.points[i][j].shearForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint->upPoint, myPM.shearSpringLength,myPM.kEslatic_shear,myPM.kDump_shear);
+					myPM.points[i][j].shearForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint->upPoint, myPM.shearSpringLength,myPM.kEslatic_shear,myPM.kDump_shear);
 					//bending
-					myPM.points[i][j].bendingForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].upPoint->upPoint, myPM.bendingSpringLength);
-					myPM.points[i][j].bendingForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint->leftPoint, myPM.bendingSpringLength);
+					myPM.points[i][j].bendingForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].upPoint->upPoint, myPM.bendingSpringLength,myPM.kEslatic_bend,myPM.kDump_bend);
+					myPM.points[i][j].bendingForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint->leftPoint, myPM.bendingSpringLength,myPM.kEslatic_bend,myPM.kDump_bend);
 					break;
 				case 14:
 					//structural
-					myPM.points[i][j].structuralForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint, myPM.structuralSpringLength);
-					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].upPoint, myPM.structuralSpringLength);
-					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint, myPM.structuralSpringLength);
+					myPM.points[i][j].structuralForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint, myPM.structuralSpringLength,myPM.kEslatic_struc,myPM.kDump_struc);
+					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].upPoint, myPM.structuralSpringLength,myPM.kEslatic_struc,myPM.kDump_struc);
+					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint, myPM.structuralSpringLength,myPM.kEslatic_struc,myPM.kDump_struc);
 					//shear
-					myPM.points[i][j].shearForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].upPoint->rightPoint, myPM.shearSpringLength);
-					myPM.points[i][j].shearForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint->rightPoint, myPM.shearSpringLength);
+					myPM.points[i][j].shearForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].upPoint->rightPoint, myPM.shearSpringLength,myPM.kEslatic_shear,myPM.kDump_shear);
+					myPM.points[i][j].shearForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint->rightPoint, myPM.shearSpringLength,myPM.kEslatic_shear,myPM.kDump_shear);
 					//bending
-					myPM.points[i][j].bendingForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint->downPoint, myPM.bendingSpringLength);
-					myPM.points[i][j].bendingForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint->rightPoint, myPM.bendingSpringLength);
+					myPM.points[i][j].bendingForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint->downPoint, myPM.bendingSpringLength,myPM.kEslatic_bend,myPM.kDump_bend);
+					myPM.points[i][j].bendingForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint->rightPoint, myPM.bendingSpringLength,myPM.kEslatic_bend,myPM.kDump_bend);
 					break;
 				case 15:
 					//structural
-					myPM.points[i][j].structuralForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint, myPM.structuralSpringLength);
-					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].upPoint, myPM.structuralSpringLength);
-					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint, myPM.structuralSpringLength);
+					myPM.points[i][j].structuralForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint, myPM.structuralSpringLength,myPM.kEslatic_struc,myPM.kDump_struc);
+					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].upPoint, myPM.structuralSpringLength,myPM.kEslatic_struc,myPM.kDump_struc);
+					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint, myPM.structuralSpringLength,myPM.kEslatic_struc,myPM.kDump_struc);
 					//shear
-					myPM.points[i][j].shearForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].upPoint->rightPoint, myPM.shearSpringLength);
-					myPM.points[i][j].shearForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint->rightPoint, myPM.shearSpringLength);
+					myPM.points[i][j].shearForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].upPoint->rightPoint, myPM.shearSpringLength,myPM.kEslatic_shear,myPM.kDump_shear);
+					myPM.points[i][j].shearForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint->rightPoint, myPM.shearSpringLength,myPM.kEslatic_shear,myPM.kDump_shear);
 					//bending
-					myPM.points[i][j].bendingForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].upPoint->upPoint, myPM.bendingSpringLength);
-					myPM.points[i][j].bendingForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint->rightPoint, myPM.bendingSpringLength);
+					myPM.points[i][j].bendingForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].upPoint->upPoint, myPM.bendingSpringLength,myPM.kEslatic_bend,myPM.kDump_bend);
+					myPM.points[i][j].bendingForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint->rightPoint, myPM.bendingSpringLength,myPM.kEslatic_bend,myPM.kDump_bend);
 					break;
 				case 16:
 					//structural
-					myPM.points[i][j].structuralForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint, myPM.structuralSpringLength);
-					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].upPoint, myPM.structuralSpringLength);
-					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint, myPM.structuralSpringLength);
+					myPM.points[i][j].structuralForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint, myPM.structuralSpringLength,myPM.kEslatic_struc,myPM.kDump_struc);
+					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].upPoint, myPM.structuralSpringLength,myPM.kEslatic_struc,myPM.kDump_struc);
+					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint, myPM.structuralSpringLength,myPM.kEslatic_struc,myPM.kDump_struc);
 					//shear
-					myPM.points[i][j].shearForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].upPoint->leftPoint, myPM.shearSpringLength);
-					myPM.points[i][j].shearForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint->leftPoint, myPM.shearSpringLength);
+					myPM.points[i][j].shearForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].upPoint->leftPoint, myPM.shearSpringLength,myPM.kEslatic_shear,myPM.kDump_shear);
+					myPM.points[i][j].shearForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint->leftPoint, myPM.shearSpringLength,myPM.kEslatic_shear,myPM.kDump_shear);
 					//bending
-					myPM.points[i][j].bendingForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint->downPoint, myPM.bendingSpringLength);
-					myPM.points[i][j].bendingForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint->leftPoint, myPM.bendingSpringLength);
+					myPM.points[i][j].bendingForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint->downPoint, myPM.bendingSpringLength,myPM.kEslatic_bend,myPM.kDump_bend);
+					myPM.points[i][j].bendingForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint->leftPoint, myPM.bendingSpringLength,myPM.kEslatic_bend,myPM.kDump_bend);
 					break;
 				case 17:
 					//structural
-					myPM.points[i][j].structuralForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint, myPM.structuralSpringLength);
-					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].upPoint, myPM.structuralSpringLength);
-					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint, myPM.structuralSpringLength);
+					myPM.points[i][j].structuralForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint, myPM.structuralSpringLength,myPM.kEslatic_struc,myPM.kDump_struc);
+					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].upPoint, myPM.structuralSpringLength,myPM.kEslatic_struc,myPM.kDump_struc);
+					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint, myPM.structuralSpringLength,myPM.kEslatic_struc,myPM.kDump_struc);
 					//shear
-					myPM.points[i][j].shearForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].upPoint->leftPoint, myPM.shearSpringLength);
-					myPM.points[i][j].shearForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint->leftPoint, myPM.shearSpringLength);
+					myPM.points[i][j].shearForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].upPoint->leftPoint, myPM.shearSpringLength,myPM.kEslatic_shear,myPM.kDump_shear);
+					myPM.points[i][j].shearForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint->leftPoint, myPM.shearSpringLength,myPM.kEslatic_shear,myPM.kDump_shear);
 					//bending
-					myPM.points[i][j].bendingForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].upPoint->upPoint, myPM.bendingSpringLength);
-					myPM.points[i][j].bendingForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint->leftPoint, myPM.bendingSpringLength);
+					myPM.points[i][j].bendingForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].upPoint->upPoint, myPM.bendingSpringLength,myPM.kEslatic_bend,myPM.kDump_bend);
+					myPM.points[i][j].bendingForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint->leftPoint, myPM.bendingSpringLength,myPM.kEslatic_bend,myPM.kDump_bend);
 					break;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -522,127 +531,127 @@ void MyPhysicsUpdate(float dt) {
 
 				case 18:
 					//structural
-					myPM.points[i][j].structuralForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint, myPM.structuralSpringLength);
-					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint, myPM.structuralSpringLength);
-					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].upPoint, myPM.structuralSpringLength);
-					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint, myPM.structuralSpringLength);
+					myPM.points[i][j].structuralForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint, myPM.structuralSpringLength,myPM.kEslatic_struc,myPM.kDump_struc);
+					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint, myPM.structuralSpringLength,myPM.kEslatic_struc,myPM.kDump_struc);
+					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].upPoint, myPM.structuralSpringLength,myPM.kEslatic_struc,myPM.kDump_struc);
+					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint, myPM.structuralSpringLength,myPM.kEslatic_struc,myPM.kDump_struc);
 					//shear
-					myPM.points[i][j].shearForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint->upPoint, myPM.shearSpringLength);
-					myPM.points[i][j].shearForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint->downPoint, myPM.shearSpringLength);
-					myPM.points[i][j].shearForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint->downPoint, myPM.shearSpringLength);
-					myPM.points[i][j].shearForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint->upPoint, myPM.shearSpringLength);
+					myPM.points[i][j].shearForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint->upPoint, myPM.shearSpringLength,myPM.kEslatic_shear,myPM.kDump_shear);
+					myPM.points[i][j].shearForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint->downPoint, myPM.shearSpringLength,myPM.kEslatic_shear,myPM.kDump_shear);
+					myPM.points[i][j].shearForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint->downPoint, myPM.shearSpringLength,myPM.kEslatic_shear,myPM.kDump_shear);
+					myPM.points[i][j].shearForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint->upPoint, myPM.shearSpringLength,myPM.kEslatic_shear,myPM.kDump_shear);
 					//bending
-					myPM.points[i][j].bendingForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint->downPoint, myPM.bendingSpringLength);
-					myPM.points[i][j].bendingForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint->rightPoint, myPM.bendingSpringLength);
+					myPM.points[i][j].bendingForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint->downPoint, myPM.bendingSpringLength,myPM.kEslatic_bend,myPM.kDump_bend);
+					myPM.points[i][j].bendingForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint->rightPoint, myPM.bendingSpringLength,myPM.kEslatic_bend,myPM.kDump_bend);
 					break;
 				case 19:
 					//structural
-					myPM.points[i][j].structuralForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint, myPM.structuralSpringLength);
-					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint, myPM.structuralSpringLength);
-					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].upPoint, myPM.structuralSpringLength);
-					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint, myPM.structuralSpringLength);
+					myPM.points[i][j].structuralForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint, myPM.structuralSpringLength,myPM.kEslatic_struc,myPM.kDump_struc);
+					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint, myPM.structuralSpringLength,myPM.kEslatic_struc,myPM.kDump_struc);
+					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].upPoint, myPM.structuralSpringLength,myPM.kEslatic_struc,myPM.kDump_struc);
+					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint, myPM.structuralSpringLength,myPM.kEslatic_struc,myPM.kDump_struc);
 					//shear
-					myPM.points[i][j].shearForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint->upPoint, myPM.shearSpringLength);
-					myPM.points[i][j].shearForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint->downPoint, myPM.shearSpringLength);
-					myPM.points[i][j].shearForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint->downPoint, myPM.shearSpringLength);
-					myPM.points[i][j].shearForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint->upPoint, myPM.shearSpringLength);
+					myPM.points[i][j].shearForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint->upPoint, myPM.shearSpringLength,myPM.kEslatic_shear,myPM.kDump_shear);
+					myPM.points[i][j].shearForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint->downPoint, myPM.shearSpringLength,myPM.kEslatic_shear,myPM.kDump_shear);
+					myPM.points[i][j].shearForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint->downPoint, myPM.shearSpringLength,myPM.kEslatic_shear,myPM.kDump_shear);
+					myPM.points[i][j].shearForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint->upPoint, myPM.shearSpringLength,myPM.kEslatic_shear,myPM.kDump_shear);
 					//bending
-					myPM.points[i][j].bendingForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint->downPoint, myPM.bendingSpringLength);
-					myPM.points[i][j].bendingForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint->leftPoint, myPM.bendingSpringLength);
+					myPM.points[i][j].bendingForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint->downPoint, myPM.bendingSpringLength,myPM.kEslatic_bend,myPM.kDump_bend);
+					myPM.points[i][j].bendingForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint->leftPoint, myPM.bendingSpringLength,myPM.kEslatic_bend,myPM.kDump_bend);
 					break;
 				case 20:
 					//structural
-					myPM.points[i][j].structuralForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint, myPM.structuralSpringLength);
-					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint, myPM.structuralSpringLength);
-					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].upPoint, myPM.structuralSpringLength);
-					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint, myPM.structuralSpringLength);
+					myPM.points[i][j].structuralForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint, myPM.structuralSpringLength,myPM.kEslatic_struc,myPM.kDump_struc);
+					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint, myPM.structuralSpringLength,myPM.kEslatic_struc,myPM.kDump_struc);
+					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].upPoint, myPM.structuralSpringLength,myPM.kEslatic_struc,myPM.kDump_struc);
+					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint, myPM.structuralSpringLength,myPM.kEslatic_struc,myPM.kDump_struc);
 					//shear
-					myPM.points[i][j].shearForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint->upPoint, myPM.shearSpringLength);
-					myPM.points[i][j].shearForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint->downPoint, myPM.shearSpringLength);
-					myPM.points[i][j].shearForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint->downPoint, myPM.shearSpringLength);
-					myPM.points[i][j].shearForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint->upPoint, myPM.shearSpringLength);
+					myPM.points[i][j].shearForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint->upPoint, myPM.shearSpringLength,myPM.kEslatic_shear,myPM.kDump_shear);
+					myPM.points[i][j].shearForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint->downPoint, myPM.shearSpringLength,myPM.kEslatic_shear,myPM.kDump_shear);
+					myPM.points[i][j].shearForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint->downPoint, myPM.shearSpringLength,myPM.kEslatic_shear,myPM.kDump_shear);
+					myPM.points[i][j].shearForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint->upPoint, myPM.shearSpringLength,myPM.kEslatic_shear,myPM.kDump_shear);
 					//bending
-					myPM.points[i][j].bendingForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].upPoint->upPoint, myPM.bendingSpringLength);
-					myPM.points[i][j].bendingForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint->rightPoint, myPM.bendingSpringLength);
+					myPM.points[i][j].bendingForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].upPoint->upPoint, myPM.bendingSpringLength,myPM.kEslatic_bend,myPM.kDump_bend);
+					myPM.points[i][j].bendingForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint->rightPoint, myPM.bendingSpringLength,myPM.kEslatic_bend,myPM.kDump_bend);
 					break;
 				case 21:
 					//structural
-					myPM.points[i][j].structuralForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint, myPM.structuralSpringLength);
-					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint, myPM.structuralSpringLength);
-					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].upPoint, myPM.structuralSpringLength);
-					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint, myPM.structuralSpringLength);
+					myPM.points[i][j].structuralForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint, myPM.structuralSpringLength,myPM.kEslatic_struc,myPM.kDump_struc);
+					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint, myPM.structuralSpringLength,myPM.kEslatic_struc,myPM.kDump_struc);
+					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].upPoint, myPM.structuralSpringLength,myPM.kEslatic_struc,myPM.kDump_struc);
+					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint, myPM.structuralSpringLength,myPM.kEslatic_struc,myPM.kDump_struc);
 					//shear
-					myPM.points[i][j].shearForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint->upPoint, myPM.shearSpringLength);
-					myPM.points[i][j].shearForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint->downPoint, myPM.shearSpringLength);
-					myPM.points[i][j].shearForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint->downPoint, myPM.shearSpringLength);
-					myPM.points[i][j].shearForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint->upPoint, myPM.shearSpringLength);
+					myPM.points[i][j].shearForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint->upPoint, myPM.shearSpringLength,myPM.kEslatic_shear,myPM.kDump_shear);
+					myPM.points[i][j].shearForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint->downPoint, myPM.shearSpringLength,myPM.kEslatic_shear,myPM.kDump_shear);
+					myPM.points[i][j].shearForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint->downPoint, myPM.shearSpringLength,myPM.kEslatic_shear,myPM.kDump_shear);
+					myPM.points[i][j].shearForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint->upPoint, myPM.shearSpringLength,myPM.kEslatic_shear,myPM.kDump_shear);
 					//bending
-					myPM.points[i][j].bendingForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].upPoint->upPoint, myPM.bendingSpringLength);
-					myPM.points[i][j].bendingForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint->leftPoint, myPM.bendingSpringLength);
+					myPM.points[i][j].bendingForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].upPoint->upPoint, myPM.bendingSpringLength,myPM.kEslatic_bend,myPM.kDump_bend);
+					myPM.points[i][j].bendingForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint->leftPoint, myPM.bendingSpringLength,myPM.kEslatic_bend,myPM.kDump_bend);
 					break;
 				case 22:
 					//structural
-					myPM.points[i][j].structuralForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint, myPM.structuralSpringLength);
-					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint, myPM.structuralSpringLength);
-					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].upPoint, myPM.structuralSpringLength);
-					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint, myPM.structuralSpringLength);
+					myPM.points[i][j].structuralForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint, myPM.structuralSpringLength,myPM.kEslatic_struc,myPM.kDump_struc);
+					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint, myPM.structuralSpringLength,myPM.kEslatic_struc,myPM.kDump_struc);
+					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].upPoint, myPM.structuralSpringLength,myPM.kEslatic_struc,myPM.kDump_struc);
+					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint, myPM.structuralSpringLength,myPM.kEslatic_struc,myPM.kDump_struc);
 					//shear
-					myPM.points[i][j].shearForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint->upPoint, myPM.shearSpringLength);
-					myPM.points[i][j].shearForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint->downPoint, myPM.shearSpringLength);
-					myPM.points[i][j].shearForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint->downPoint, myPM.shearSpringLength);
-					myPM.points[i][j].shearForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint->upPoint, myPM.shearSpringLength);
+					myPM.points[i][j].shearForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint->upPoint, myPM.shearSpringLength,myPM.kEslatic_shear,myPM.kDump_shear);
+					myPM.points[i][j].shearForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint->downPoint, myPM.shearSpringLength,myPM.kEslatic_shear,myPM.kDump_shear);
+					myPM.points[i][j].shearForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint->downPoint, myPM.shearSpringLength,myPM.kEslatic_shear,myPM.kDump_shear);
+					myPM.points[i][j].shearForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint->upPoint, myPM.shearSpringLength,myPM.kEslatic_shear,myPM.kDump_shear);
 					//bending
-					myPM.points[i][j].bendingForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint->downPoint, myPM.bendingSpringLength);
-					myPM.points[i][j].bendingForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].upPoint->upPoint, myPM.bendingSpringLength);
-					myPM.points[i][j].bendingForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint->rightPoint, myPM.bendingSpringLength);
+					myPM.points[i][j].bendingForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint->downPoint, myPM.bendingSpringLength,myPM.kEslatic_bend,myPM.kDump_bend);
+					myPM.points[i][j].bendingForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].upPoint->upPoint, myPM.bendingSpringLength,myPM.kEslatic_bend,myPM.kDump_bend);
+					myPM.points[i][j].bendingForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint->rightPoint, myPM.bendingSpringLength,myPM.kEslatic_bend,myPM.kDump_bend);
 					break;
 				case 23:
 					//structural
-					myPM.points[i][j].structuralForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint, myPM.structuralSpringLength);
-					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint, myPM.structuralSpringLength);
-					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].upPoint, myPM.structuralSpringLength);
-					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint, myPM.structuralSpringLength);
+					myPM.points[i][j].structuralForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint, myPM.structuralSpringLength,myPM.kEslatic_struc,myPM.kDump_struc);
+					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint, myPM.structuralSpringLength,myPM.kEslatic_struc,myPM.kDump_struc);
+					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].upPoint, myPM.structuralSpringLength,myPM.kEslatic_struc,myPM.kDump_struc);
+					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint, myPM.structuralSpringLength,myPM.kEslatic_struc,myPM.kDump_struc);
 					//shear
-					myPM.points[i][j].shearForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint->upPoint, myPM.shearSpringLength);
-					myPM.points[i][j].shearForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint->downPoint, myPM.shearSpringLength);
-					myPM.points[i][j].shearForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint->downPoint, myPM.shearSpringLength);
-					myPM.points[i][j].shearForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint->upPoint, myPM.shearSpringLength);
+					myPM.points[i][j].shearForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint->upPoint, myPM.shearSpringLength,myPM.kEslatic_shear,myPM.kDump_shear);
+					myPM.points[i][j].shearForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint->downPoint, myPM.shearSpringLength,myPM.kEslatic_shear,myPM.kDump_shear);
+					myPM.points[i][j].shearForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint->downPoint, myPM.shearSpringLength,myPM.kEslatic_shear,myPM.kDump_shear);
+					myPM.points[i][j].shearForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint->upPoint, myPM.shearSpringLength,myPM.kEslatic_shear,myPM.kDump_shear);
 					//bending
-					myPM.points[i][j].bendingForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint->downPoint, myPM.bendingSpringLength);
-					myPM.points[i][j].bendingForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].upPoint->upPoint, myPM.bendingSpringLength);
-					myPM.points[i][j].bendingForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint->leftPoint, myPM.bendingSpringLength);
+					myPM.points[i][j].bendingForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint->downPoint, myPM.bendingSpringLength,myPM.kEslatic_bend,myPM.kDump_bend);
+					myPM.points[i][j].bendingForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].upPoint->upPoint, myPM.bendingSpringLength,myPM.kEslatic_bend,myPM.kDump_bend);
+					myPM.points[i][j].bendingForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint->leftPoint, myPM.bendingSpringLength,myPM.kEslatic_bend,myPM.kDump_bend);
 					break;
 				case 24:
 					//structural
-					myPM.points[i][j].structuralForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint, myPM.structuralSpringLength);
-					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint, myPM.structuralSpringLength);
-					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].upPoint, myPM.structuralSpringLength);
-					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint, myPM.structuralSpringLength);
+					myPM.points[i][j].structuralForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint, myPM.structuralSpringLength,myPM.kEslatic_struc,myPM.kDump_struc);
+					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint, myPM.structuralSpringLength,myPM.kEslatic_struc,myPM.kDump_struc);
+					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].upPoint, myPM.structuralSpringLength,myPM.kEslatic_struc,myPM.kDump_struc);
+					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint, myPM.structuralSpringLength,myPM.kEslatic_struc,myPM.kDump_struc);
 					//shear
-					myPM.points[i][j].shearForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint->upPoint, myPM.shearSpringLength);
-					myPM.points[i][j].shearForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint->downPoint, myPM.shearSpringLength);
-					myPM.points[i][j].shearForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint->downPoint, myPM.shearSpringLength);
-					myPM.points[i][j].shearForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint->upPoint, myPM.shearSpringLength);
+					myPM.points[i][j].shearForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint->upPoint, myPM.shearSpringLength,myPM.kEslatic_shear,myPM.kDump_shear);
+					myPM.points[i][j].shearForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint->downPoint, myPM.shearSpringLength,myPM.kEslatic_shear,myPM.kDump_shear);
+					myPM.points[i][j].shearForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint->downPoint, myPM.shearSpringLength,myPM.kEslatic_shear,myPM.kDump_shear);
+					myPM.points[i][j].shearForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint->upPoint, myPM.shearSpringLength,myPM.kEslatic_shear,myPM.kDump_shear);
 					//bending
-					myPM.points[i][j].bendingForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint->downPoint, myPM.bendingSpringLength);
-					myPM.points[i][j].bendingForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint->leftPoint, myPM.bendingSpringLength);
-					myPM.points[i][j].bendingForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint->rightPoint, myPM.bendingSpringLength);
+					myPM.points[i][j].bendingForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint->downPoint, myPM.bendingSpringLength,myPM.kEslatic_bend,myPM.kDump_bend);
+					myPM.points[i][j].bendingForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint->leftPoint, myPM.bendingSpringLength,myPM.kEslatic_bend,myPM.kDump_bend);
+					myPM.points[i][j].bendingForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint->rightPoint, myPM.bendingSpringLength,myPM.kEslatic_bend,myPM.kDump_bend);
 					break;
 				case 25:
 					//structural
-					myPM.points[i][j].structuralForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint, myPM.structuralSpringLength);
-					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint, myPM.structuralSpringLength);
-					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].upPoint, myPM.structuralSpringLength);
-					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint, myPM.structuralSpringLength);
+					myPM.points[i][j].structuralForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint, myPM.structuralSpringLength,myPM.kEslatic_struc,myPM.kDump_struc);
+					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint, myPM.structuralSpringLength,myPM.kEslatic_struc,myPM.kDump_struc);
+					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].upPoint, myPM.structuralSpringLength,myPM.kEslatic_struc,myPM.kDump_struc);
+					myPM.points[i][j].structuralForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].downPoint, myPM.structuralSpringLength,myPM.kEslatic_struc,myPM.kDump_struc);
 					//shear
-					myPM.points[i][j].shearForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint->upPoint, myPM.shearSpringLength);
-					myPM.points[i][j].shearForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint->downPoint, myPM.shearSpringLength);
-					myPM.points[i][j].shearForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint->downPoint, myPM.shearSpringLength);
-					myPM.points[i][j].shearForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint->upPoint, myPM.shearSpringLength);
+					myPM.points[i][j].shearForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint->upPoint, myPM.shearSpringLength,myPM.kEslatic_shear,myPM.kDump_shear);
+					myPM.points[i][j].shearForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint->downPoint, myPM.shearSpringLength,myPM.kEslatic_shear,myPM.kDump_shear);
+					myPM.points[i][j].shearForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint->downPoint, myPM.shearSpringLength,myPM.kEslatic_shear,myPM.kDump_shear);
+					myPM.points[i][j].shearForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint->upPoint, myPM.shearSpringLength,myPM.kEslatic_shear,myPM.kDump_shear);
 					//bending
-					myPM.points[i][j].bendingForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].upPoint->upPoint, myPM.bendingSpringLength);
-					myPM.points[i][j].bendingForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint->leftPoint, myPM.bendingSpringLength);
-					myPM.points[i][j].bendingForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint->rightPoint, myPM.bendingSpringLength);
+					myPM.points[i][j].bendingForce = getSpringForce(myPM.points[i][j], *myPM.points[i][j].upPoint->upPoint, myPM.bendingSpringLength,myPM.kEslatic_bend,myPM.kDump_bend);
+					myPM.points[i][j].bendingForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].leftPoint->leftPoint, myPM.bendingSpringLength,myPM.kEslatic_bend,myPM.kDump_bend);
+					myPM.points[i][j].bendingForce += getSpringForce(myPM.points[i][j], *myPM.points[i][j].rightPoint->rightPoint, myPM.bendingSpringLength,myPM.kEslatic_bend,myPM.kDump_bend);
 					break;
 				default:
 					break;
@@ -661,6 +670,7 @@ void MyPhysicsUpdate(float dt) {
 		for (int j = 0; j < 14; j++) {
 
 			if (!((i == 0 && j == 0) || (i == 0 && j == 13))) {
+
 				myPM.points[i][j].newPosition = myPM.points[i][j].actualPosition + (myPM.points[i][j].actualPosition - myPM.points[i][j].lastPosition) + (myPM.points[i][j].totalForce / myPM.points[i][j].mass)*glm::pow(dt*myPM.dtReductor, 2);
 
 
@@ -774,6 +784,9 @@ void GUI() {
 		{
 			resetMyPM();
 		}
+		if (ImGui::SliderFloat("Distancia entre nodos", &myPM.structuralSpringLength, 0.1f, 0.5f)) {
+			resetMyPM();
+		}
 		ImGui::SliderFloat("Indice rebote", &myPM.E, 0.f,1.f);
 		ImGui::SliderFloat("Gravedad", &myPM.gravity, -9.81f * 2, 0);
 		//ImGui::SliderFloat("Reductor dt", &myPM.dtReductor, 0,0.1f);
@@ -784,6 +797,12 @@ void GUI() {
 		ImGui::DragFloat("Y esfera", &Sphere::c.y, 0.01f);
 		ImGui::DragFloat("Z esfera", &Sphere::c.z, 0.01f);
 		ImGui::Checkbox("Esfera", &renderSphere);
+		ImGui::SliderFloat("K_e_Structural", &myPM.kEslatic_struc, 0, 1000);
+		ImGui::SliderFloat("K_d_Structural", &myPM.kDump_struc, 0, 1000);
+		ImGui::SliderFloat("K_e_Shear", &myPM.kEslatic_shear, 0, 1000);
+		ImGui::SliderFloat("K_d_Shear", &myPM.kDump_shear, 0, 1000);
+		ImGui::SliderFloat("K_e_Bending", &myPM.kEslatic_bend, 0, 1000);
+		ImGui::SliderFloat("K_d_Bending", &myPM.kDump_bend, 0, 1000);
 	}
 
 	ImGui::End();
