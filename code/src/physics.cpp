@@ -769,20 +769,21 @@ void GUI() {
 	{
 		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);//FrameRate
 		//Exemple_GUI();
-		ImGui::Checkbox("Esfera", &renderSphere);
+		
 		if (ImGui::Button("Reseteo manual"))
 		{
 			resetMyPM();
 		}
-		ImGui::SliderFloat("Fuerza rebote", &myPM.E, 0.f,1.f);
-		ImGui::DragFloat("Gravedad", &myPM.gravity, 0.01f);
-		ImGui::DragFloat("Reductor dt", &myPM.dtReductor, 0.01f);
+		ImGui::SliderFloat("Indice rebote", &myPM.E, 0.f,1.f);
+		ImGui::SliderFloat("Gravedad", &myPM.gravity, -9.81f * 2, 0);
+		//ImGui::SliderFloat("Reductor dt", &myPM.dtReductor, 0,0.1f);
 		ImGui::SliderFloat("Tiempo de reseteo automatico", &myPM.automaticTimeReset, 10.f, 30.f);
 		ImGui::Text("Estadisticas esfera:");
 		ImGui::DragFloat("Radio esfera", &Sphere::r, 0.01f);
 		ImGui::DragFloat("X esfera", &Sphere::c.x, 0.01f);
 		ImGui::DragFloat("Y esfera", &Sphere::c.y, 0.01f);
 		ImGui::DragFloat("Z esfera", &Sphere::c.z, 0.01f);
+		ImGui::Checkbox("Esfera", &renderSphere);
 	}
 
 	ImGui::End();
