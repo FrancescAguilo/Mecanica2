@@ -27,10 +27,6 @@ namespace ClothMesh {
 }
 
 namespace {
-	static struct PhysParams {
-		float min = 0.f;
-		float max = 10.f;
-	} p_pars;
 
 
 	static struct MeshPoint {
@@ -53,6 +49,8 @@ namespace {
 		MeshPoint *downPoint;
 
 		int type; //del 1 al 25
+
+	
 
 	};
 
@@ -775,7 +773,8 @@ void MyPhysicsCleanup() {
 void GUI() {
 	bool show = true;
 	ImGui::Begin("Physics Parameters", &show, 0);
-	ImGui::SetWindowSize(ImVec2(400, 518));
+	ImGui::SetWindowSize(ImVec2(400, 541));
+	ImGui::SetWindowPos(ImVec2(10, 12));
 	{
 		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);//FrameRate
 		ImGui::Text("AA3 practica de roba");
