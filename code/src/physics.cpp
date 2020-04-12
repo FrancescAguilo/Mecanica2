@@ -4,11 +4,7 @@
 #include <iostream>
 #include <glm\gtx\intersect.hpp>
 
-//Exemple
-extern void Exemple_GUI();
-extern void Exemple_PhysicsInit();
-extern void Exemple_PhysicsUpdate(float dt);
-extern void Exemple_PhysicsCleanup();
+
 extern bool renderSphere;
 extern bool renderCloth;
 
@@ -41,10 +37,10 @@ namespace {
 		glm::vec3 newPosition;
 		glm::vec3 actualPosition;
 		glm::vec3 lastPosition;
-		glm::vec3 totalForce; //total
-		glm::vec3 structuralForce; //horitzontals i verticals
-		glm::vec3 shearForce; //diagonals
-		glm::vec3 bendingForce; //contaria?
+		glm::vec3 totalForce; 
+		glm::vec3 structuralForce; 
+		glm::vec3 shearForce; 
+		glm::vec3 bendingForce; 
 		float mass = 1;
 		
 
@@ -57,8 +53,6 @@ namespace {
 		MeshPoint *downPoint;
 
 		int type; //del 1 al 25
-
-	
 
 	};
 
@@ -718,7 +712,7 @@ void MyPhysicsUpdate(float dt) {
 
 					}
 
-					//renderSphere = true;
+					
 					//Colisiones esfera
 					if (renderSphere) {
 						Sphere::updateSphere(Sphere::c, Sphere::r);
@@ -784,7 +778,6 @@ void GUI() {
 	ImGui::SetWindowSize(ImVec2(400, 518));
 	{
 		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);//FrameRate
-		//Exemple_GUI();
 		ImGui::Text("AA3 practica de roba");
 		ImGui::Text("Francesc Aguilo y Victor Blas");
 		ImGui::Text(" ");
@@ -798,7 +791,6 @@ void GUI() {
 		}
 		ImGui::SliderFloat("Indice rebote", &myPM.E, 0.f,1.f);
 		ImGui::SliderFloat("Gravedad", &myPM.gravity, -9.81f * 2, 0);
-		//ImGui::SliderFloat("Reductor dt", &myPM.dtReductor, 0,0.1f);
 		ImGui::SliderFloat("Tiempo de reseteo automatico", &myPM.automaticTimeReset, 10.f, 120.f);
 		ImGui::Text("Estadisticas esfera:");
 		ImGui::Checkbox("Esfera", &renderSphere);
