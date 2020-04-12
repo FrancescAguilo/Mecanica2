@@ -82,6 +82,7 @@ namespace {
 		float kEslatic_bend = 400;
 		float kDump_bend = 300;
 
+
 	} myPM;
 }
 void resetMyPM() {
@@ -775,11 +776,14 @@ void MyPhysicsCleanup() {
 void GUI() {
 	bool show = true;
 	ImGui::Begin("Physics Parameters", &show, 0);
-	ImGui::SetWindowSize(ImVec2(400, 300));
+	ImGui::SetWindowSize(ImVec2(400, 518));
 	{
 		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);//FrameRate
 		//Exemple_GUI();
-		
+		ImGui::Text("AA3 practica de roba");
+		ImGui::Text("Francesc Aguilo y Victor Blas");
+		ImGui::Text(" ");
+		ImGui::Text("Estadisticas:");
 		if (ImGui::Button("Reseteo manual"))
 		{
 			resetMyPM();
@@ -790,13 +794,14 @@ void GUI() {
 		ImGui::SliderFloat("Indice rebote", &myPM.E, 0.f,1.f);
 		ImGui::SliderFloat("Gravedad", &myPM.gravity, -9.81f * 2, 0);
 		//ImGui::SliderFloat("Reductor dt", &myPM.dtReductor, 0,0.1f);
-		ImGui::SliderFloat("Tiempo de reseteo automatico", &myPM.automaticTimeReset, 10.f, 30.f);
+		ImGui::SliderFloat("Tiempo de reseteo automatico", &myPM.automaticTimeReset, 10.f, 120.f);
 		ImGui::Text("Estadisticas esfera:");
+		ImGui::Checkbox("Esfera", &renderSphere);
 		ImGui::DragFloat("Radio esfera", &Sphere::r, 0.01f);
 		ImGui::DragFloat("X esfera", &Sphere::c.x, 0.01f);
 		ImGui::DragFloat("Y esfera", &Sphere::c.y, 0.01f);
 		ImGui::DragFloat("Z esfera", &Sphere::c.z, 0.01f);
-		ImGui::Checkbox("Esfera", &renderSphere);
+		ImGui::Text("Constantes elastica y dump:");
 		ImGui::SliderFloat("K_e_Structural", &myPM.kEslatic_struc, 0, 1000);
 		ImGui::SliderFloat("K_d_Structural", &myPM.kDump_struc, 0, 1000);
 		ImGui::SliderFloat("K_e_Shear", &myPM.kEslatic_shear, 0, 1000);
